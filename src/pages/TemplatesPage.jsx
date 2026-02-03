@@ -45,7 +45,7 @@ const templates = [
         id: 5,
         title: "Starry Night",
         description: "Dark mode aesthetics with twinkling stars for a cosmic love.",
-        image: "https://images.unsplash.com/photo-1534531173927-aed12833cc58?q=80&w=2071&auto=format&fit=crop",
+        image: "./templates/nightsky.jpg",
         tags: ["Dark", "Cosmic", "Mysterious"],
         color: "bg-slate-900"
     },
