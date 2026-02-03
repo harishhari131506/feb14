@@ -18,6 +18,9 @@ const WebGLBackground = ({ children, className = '' }) => {
       <Canvas
         gl={{ alpha: true, antialias: true }}
         camera={{ position: [0, 0, 5], fov: 75 }}
+        dpr={[1, 1.5]}
+        frameloop="always"
+        performance={{ min: 0.4, max: 1 }}
         style={{ position: 'absolute', inset: 0, zIndex: 0 }}
       >
         <Suspense fallback={null}>

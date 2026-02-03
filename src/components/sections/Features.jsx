@@ -248,9 +248,9 @@ const PrivacyVisual = ({ isVisible }) => {
     );
 };
 
-const FeatureBlock = ({ feature, index }) => {
+const FeatureBlock = ({ feature, index, disableViewportAnimation = false }) => {
     const isEven = index % 2 === 0;
-    const [isVisible, setIsVisible] = useState(false);
+    const [isVisible, setIsVisible] = useState(disableViewportAnimation);
     const prefersReducedMotion = useReducedMotion();
 
     // Function to render the correct visual component
@@ -287,15 +287,35 @@ const FeatureBlock = ({ feature, index }) => {
             )}>
                 {/* Visual Side */}
                 <motion.div
-                    initial={{ opacity: 0, x: isEven ? -50 : 50 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true, margin: "-10%" }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    initial={
+                        disableViewportAnimation
+                            ? false
+                            : { opacity: 0, x: isEven ? -50 : 50 }
+                    }
+                    whileInView={
+                        disableViewportAnimation
+                            ? undefined
+                            : { opacity: 1, x: 0 }
+                    }
+                    viewport={
+                        disableViewportAnimation
+                            ? undefined
+                            : { once: true, margin: "-10%" }
+                    }
+                    transition={
+                        disableViewportAnimation
+                            ? undefined
+                            : { duration: 0.8, ease: "easeOut" }
+                    }
                     onViewportEnter={() => {
                         setIsVisible(true);
                         if (!prefersReducedMotion) soundManager.playPaperRustle();
                     }}
-                    onViewportLeave={() => setIsVisible(false)}
+                    onViewportLeave={
+                        disableViewportAnimation
+                            ? undefined
+                            : () => setIsVisible(false)
+                    }
                     className={cn(
                         "feature-visual w-full md:w-1/2 aspect-[4/3] rounded-2xl shadow-xl overflow-hidden",
                         feature.visualColor,
@@ -308,10 +328,26 @@ const FeatureBlock = ({ feature, index }) => {
 
                 {/* Content Side */}
                 <motion.div
-                    initial={{ opacity: 0, x: isEven ? 50 : -50 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true, margin: "-10%" }}
-                    transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                    initial={
+                        disableViewportAnimation
+                            ? false
+                            : { opacity: 0, x: isEven ? 50 : -50 }
+                    }
+                    whileInView={
+                        disableViewportAnimation
+                            ? undefined
+                            : { opacity: 1, x: 0 }
+                    }
+                    viewport={
+                        disableViewportAnimation
+                            ? undefined
+                            : { once: true, margin: "-10%" }
+                    }
+                    transition={
+                        disableViewportAnimation
+                            ? undefined
+                            : { duration: 0.8, delay: 0.2, ease: "easeOut" }
+                    }
                     className="feature-content w-full md:w-1/2 text-center md:text-left"
                 >
                     <motion.div
@@ -380,34 +416,41 @@ const Features = () => {
             )}
 
             {/* First feature as pinned scene */}
-            {!prefersReducedMotion && features.length > 0 && (
-                <PinnedScene
-                    className="relative"
-                    timeline={[
-                        {
-                            selector: '.feature-visual',
-                            props: {
-                                from: { scale: 0.8, opacity: 0, rotateY: -90 },
-                                to: { scale: 1, opacity: 1, rotateY: 0 },
+            {/* {features.length > 0 && (
+                !prefersReducedMotion ? (
+                    <PinnedScene
+                        className="relative"
+                        pinDuration="+=50%"
+                        timeline={[
+                            {
+                                selector: '.feature-visual',
+                                props: {
+                                    // Keep it visible from the very start of the pin
+                                    // and just add a subtle refinement as you scroll.
+                                    from: { scale: 0.95, opacity: 1, rotateY: -10 },
+                                    to: { scale: 1, opacity: 1, rotateY: 0 },
+                                },
+                                position: 0,
                             },
-                            position: 0,
-                        },
-                        {
-                            selector: '.feature-content',
-                            props: {
-                                from: { x: 100, opacity: 0 },
-                                to: { x: 0, opacity: 1 },
+                            {
+                                selector: '.feature-content',
+                                props: {
+                                    from: { x: 30, opacity: 1 },
+                                    to: { x: 0, opacity: 1 },
+                                },
+                                position: 0.3, // Start slightly after visual
                             },
-                            position: 0.3,
-                        },
-                    ]}
-                >
+                        ]}
+                    >
+                        <FeatureBlock feature={features[0]} index={0} disableViewportAnimation />
+                    </PinnedScene>
+                ) : (
                     <FeatureBlock feature={features[0]} index={0} />
-                </PinnedScene>
-            )}
+                )
+            )} */}
 
             {/* Remaining features */}
-            {features.slice(1).map((feature, index) => (
+            {features.map((feature, index) => (
                 <FeatureBlock key={feature.id} feature={feature} index={index + 1} />
             ))}
         </section>

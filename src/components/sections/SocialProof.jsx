@@ -32,7 +32,7 @@ const testimonials = [
 
 const StarRating = ({ rating, delay = 0 }) => {
     const prefersReducedMotion = useReducedMotion();
-    
+
     return (
         <div className="flex gap-1 justify-center mb-6">
             {[...Array(5)].map((_, i) => (
@@ -141,7 +141,7 @@ const SocialProof = () => {
             heart.style.left = `${Math.random() * 100}%`;
             heart.style.top = `${Math.random() * 100}%`;
             heart.style.fontSize = `${12 + Math.random() * 8}px`;
-            
+
             containerRef.current.appendChild(heart);
             hearts.push(heart);
 
@@ -193,27 +193,27 @@ const SocialProof = () => {
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={currentIndex}
-                            initial={{ 
-                                opacity: 0, 
+                            initial={{
+                                opacity: 0,
                                 x: 100,
                                 scale: 1.05,
                                 filter: 'blur(10px)',
                             }}
-                            animate={{ 
-                                opacity: 1, 
+                            animate={{
+                                opacity: 1,
                                 x: 0,
                                 scale: 1,
                                 filter: 'blur(0px)',
                             }}
-                            exit={{ 
-                                opacity: 0, 
+                            exit={{
+                                opacity: 0,
                                 x: -100,
                                 scale: 0.95,
                                 filter: 'blur(10px)',
                             }}
-                            transition={{ 
-                                duration: prefersReducedMotion ? 0.3 : 0.8, 
-                                ease: "easeOut" 
+                            transition={{
+                                duration: prefersReducedMotion ? 0.3 : 0.8,
+                                ease: "easeOut"
                             }}
                             className="bg-white/85 backdrop-blur-md border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.06)] rounded-2xl p-10 md:p-16 text-center w-full mx-4"
                         >
@@ -238,7 +238,7 @@ const SocialProof = () => {
                                 <Heart className="w-8 h-8 text-rose-gold/80" fill="currentColor" />
                             </motion.div>
 
-                            <StarRating rating={testimonials[currentIndex].rating} delay={0.3} />
+                            {/* <StarRating rating={testimonials[currentIndex].rating} delay={0.3} /> */}
 
                             <motion.blockquote
                                 initial={{ opacity: 0, y: 10 }}

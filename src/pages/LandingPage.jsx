@@ -14,7 +14,7 @@ const LandingPage = () => {
             <TemplateShowcase />
             <Features />
             <SocialProof />
-            <Urgency />
+            {/* <Urgency /> */}
             <FinalCTA />
         </main>
     );

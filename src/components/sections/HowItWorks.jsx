@@ -76,7 +76,7 @@ const StepCard = ({ image, title, description, number, index }) => {
                         src={imgSrc}
                         alt={title}
                         loading={index === 0 ? "eager" : "lazy"}
-                        fetchpriority={index === 0 ? "high" : "auto"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
                         decoding="async"
                         onLoad={() => setImageLoaded(true)}
                         className={cn(
@@ -137,21 +137,21 @@ const HowItWorks = () => {
             <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
                 <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-rose-gold/[0.02] rounded-full blur-[120px] animate-parallax-slow" />
                 <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-blush-pink/[0.03] rounded-full blur-[100px] animate-parallax-fast" />
-                
+
                 {/* Floating decorative hearts */}
                 {!prefersReducedMotion && [...Array(5)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute text-rose-gold/10 text-2xl select-none"
-                    style={{
-                      left: `${14 + i * 16}%`,
-                      top: `${22 + (i % 2) * 36}%`,
-                    }}
-                    animate={{ y: [0, -14, 0], opacity: [0.08, 0.16, 0.08] }}
-                    transition={{ duration: 6 + i, repeat: Infinity, ease: 'easeInOut', delay: i * 0.4 }}
-                  >
-                    ❤️
-                  </motion.div>
+                    <motion.div
+                        key={i}
+                        className="absolute text-rose-gold/10 text-2xl select-none"
+                        style={{
+                            left: `${14 + i * 16}%`,
+                            top: `${22 + (i % 2) * 36}%`,
+                        }}
+                        animate={{ y: [0, -14, 0], opacity: [0.08, 0.16, 0.08] }}
+                        transition={{ duration: 6 + i, repeat: Infinity, ease: 'easeInOut', delay: i * 0.4 }}
+                    >
+                        ❤️
+                    </motion.div>
                 ))}
             </div>
 

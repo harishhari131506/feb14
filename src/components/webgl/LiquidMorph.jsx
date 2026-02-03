@@ -122,7 +122,7 @@ const LiquidMorph = ({
 
   return (
     <mesh ref={meshRef} position={position} scale={scale}>
-      <planeGeometry args={[10, 10, 64, 64]} />
+      <planeGeometry args={[10, 10, 32, 32]} />
       <liquidMorphMaterial
         ref={materialRef}
         uSpeed={speed}
