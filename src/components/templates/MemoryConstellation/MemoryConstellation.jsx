@@ -1,266 +1,319 @@
-import React, { useState, useRef, useEffect } from 'react';
-import gsap from 'gsap';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import BackgroundLayers from './BackgroundLayers';
 import ShootingStars from './ShootingStars';
 import Star from './Star';
 import ConstellationLines from './ConstellationLines';
 import MemoryCard from './MemoryCard';
 import EndingScreen from './EndingScreen';
-import { Play, Pause, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+// import { Link }         from 'react-router-dom';   // uncomment if using react-router
 
-const mockMemories = [
-    { id: 1, x: 15, y: 60, size: 'small', date: 'Oct 14, 2023', title: "The First Hello", description: "The moment our eyes met across the room. I knew something changed forever.", emotion: "Surprise", photo: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=1974&auto=format&fit=crop" },
-    { id: 2, x: 25, y: 30, size: 'medium', date: 'Nov 02, 2023', title: "Coffee Date", description: "Three hours of talking about everything and nothing. The coffee got cold, but my heart was warm.", emotion: "Joy", photo: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2071&auto=format&fit=crop" },
-    { id: 3, x: 40, y: 70, size: 'large', date: 'Dec 24, 2023', title: "First Kiss", description: "Under the mistletoe, shy and sweet. The world stopped spinning for a second.", emotion: "Love", photo: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop" },
-    { id: 4, x: 55, y: 40, size: 'medium', date: 'Feb 14, 2024', title: "Our First Valentine", description: "A simple dinner, a handwritten card. Perfect in its simplicity.", emotion: "Peaceful", photo: "https://images.unsplash.com/photo-1513201099705-a9746e1e201f?q=80&w=1974&auto=format&fit=crop" },
-    { id: 5, x: 70, y: 65, size: 'small', date: 'May 20, 2024', title: "Road Trip", description: "Singing at the top of our lungs, getting lost, and finding beautiful places.", emotion: "Adventure", photo: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop" },
-    { id: 6, x: 85, y: 25, size: 'large', date: 'Aug 10, 2024', title: "Moving In", description: "Boxes everywhere, pizza on the floor. The start of our shared home.", emotion: "Milestone", photo: "https://images.unsplash.com/photo-1560448204-603b3fc33ddc?q=80&w=2070&auto=format&fit=crop" },
+// ─────────────────────────────────────────────────────────────
+//  MEMORY DATA   (replace with real content)
+//  Each memory has a `phase` hint that the orchestrator uses:
+//    'normal'   – standard reveal
+//    'distance' – the paired-star "same sky, different places" beat
+//    'climax'   – the heavy, longer, no-interaction memory
+// ─────────────────────────────────────────────────────────────
+const memories = [
+    {
+        id: 1, x: 18, y: 55, size: 'small',
+        date: 'Oct 14, 2023',
+        title: 'The First Hello',
+        description: 'That night you laughed\nwithout knowing why.',
+        phase: 'normal',
+    },
+    {
+        id: 2, x: 30, y: 28, size: 'medium',
+        date: 'Nov 02, 2023',
+        title: 'Coffee Date',
+        description: 'We didn\'t say much.\nBut neither of us wanted to go inside.',
+        phase: 'normal',
+    },
+    {
+        id: 3, x: 48, y: 68, size: 'small',
+        date: 'Dec 24, 2023',
+        title: 'Christmas Eve',
+        description: 'The world was loud\nand we were the only quiet thing in it.',
+        phase: 'normal',
+    },
+    // ── DISTANCE beat (paired stars) ──
+    {
+        id: 4, x: 22, y: 40, size: 'medium',
+        date: 'Feb 03, 2024',
+        title: 'Apart',
+        description: 'You looked up from there.',
+        phase: 'distance-a',   // first of the pair
+    },
+    {
+        id: 5, x: 75, y: 35, size: 'medium',
+        date: 'Feb 03, 2024',
+        title: 'Apart',
+        description: 'I looked up from here.',
+        phase: 'distance-b',   // second of the pair
+    },
+    // ── CLIMAX ──
+    {
+        id: 6, x: 55, y: 58, size: 'large',
+        date: 'May 20, 2024',
+        title: 'The Night That Changed Everything',
+        description: 'Some nights don\'t pass.\nThey stay.\n\nWe knew it then.\nWe still know it now.',
+        phase: 'climax',
+    },
 ];
 
+// ─────────────────────────────────────────────────────────────
+//  JOURNEY PHASES  (high-level orchestration states)
+//    idle          – screen just loaded, nothing has happened yet
+//    entry         – the opening line is showing
+//    firstStar     – waiting for user to click (or auto-advance)
+//                    the first interactable star
+//    reveal        – a memory is being shown
+//    distanceIntro – the "Even when we weren't together…" line
+//    distanceA     – first paired star shown
+//    distanceB     – second paired star shown
+//    climax        – the heavy climax memory (no interaction)
+//    ending        – dawn / final text
+// ─────────────────────────────────────────────────────────────
+
 const MemoryConstellation = () => {
-    const [activeMemory, setActiveMemory] = useState(null);
-    const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+    // ── state ─────────────────────────────────────────────────
+    const [journeyPhase, setJourneyPhase] = useState('idle');
+    const [activeIndex, setActiveIndex] = useState(null);  // index into memories[]
+    const [showDistanceIntro, setShowDistanceIntro] = useState(false);
     const [showEnding, setShowEnding] = useState(false);
 
-    const containerRef = useRef(null);
-    const skyRef = useRef(null);
-    const autoPlayRef = useRef(null);
-    const headerRef = useRef(null);
-
-    // Initial page load animation
-    useEffect(() => {
-        // Fade in header with stagger
-        gsap.fromTo(headerRef.current?.children || [],
-            { opacity: 0, y: -20 },
-            {
-                opacity: 1,
-                y: 0,
-                duration: 1.2,
-                stagger: 0.2,
-                ease: "power3.out",
-                delay: 0.5
-            }
-        );
-    }, []);
-
-    // Enhanced zoom/pan when clicking a star
-    const handleStarClick = (memory) => {
-        setActiveMemory(memory);
-
-        const scale = 1.4;
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-
-        // Calculate offset to center the clicked star
-        const targetX = (50 - memory.x) * (vw / 100) * scale;
-        const targetY = (50 - memory.y) * (vh / 100) * scale;
-
-        gsap.to(skyRef.current, {
-            scale: scale,
-            x: targetX,
-            y: targetY,
-            duration: 1.5,
-            ease: "power2.inOut"
-        });
+    // Timers we need to clear on unmount
+    const timersRef = useRef([]);
+    const addTimer = (fn, ms) => {
+        const id = setTimeout(fn, ms);
+        timersRef.current.push(id);
+        return id;
     };
 
-    const handleCloseCard = () => {
-        setActiveMemory(null);
-        gsap.to(skyRef.current, {
-            scale: 1,
-            x: 0,
-            y: 0,
-            duration: 1.2,
-            ease: "power2.out"
-        });
-    };
+    // ── cleanup ───────────────────────────────────────────────
+    useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
 
-    // Auto-play journey through memories
+    // ── PHASE 1: ENTRY  (idle → entry) ────────────────────────
+    // After 4.5 s the opening line fades in; after another 3.5 s
+    // the first star becomes interactable.
     useEffect(() => {
-        if (isAutoPlaying) {
-            let currentIndex = 0;
-            if (activeMemory) {
-                currentIndex = mockMemories.findIndex(m => m.id === activeMemory.id) + 1;
-            }
+        addTimer(() => setJourneyPhase('entry'), 4500);
+        addTimer(() => setJourneyPhase('firstStar'), 8200);
+    }, []);  // mount only
 
-            const playNext = () => {
-                if (currentIndex >= mockMemories.length) {
-                    setIsAutoPlaying(false);
-                    handleCloseCard();
-                    setTimeout(() => setShowEnding(true), 1200);
-                    return;
-                }
+    // ── PHASE MACHINE: what happens when journeyPhase changes ─
+    useEffect(() => {
+        if (journeyPhase === 'firstStar') {
+            // Auto-advance to first memory after 6 s of showing the star
+            // (the star brightens on its own — "the sky decides")
+            addTimer(() => advanceTo(0), 6000);
+        }
+    }, [journeyPhase]);
 
-                handleStarClick(mockMemories[currentIndex]);
-                currentIndex++;
-                autoPlayRef.current = setTimeout(playNext, 6000);
-            };
-
-            if (!activeMemory) {
-                playNext();
-            } else {
-                autoPlayRef.current = setTimeout(playNext, 6000);
-            }
-        } else {
-            clearTimeout(autoPlayRef.current);
+    // ── advanceTo: move to the next memory in sequence ────────
+    const advanceTo = useCallback((idx) => {
+        if (idx >= memories.length) {
+            // journey is over → trigger ending
+            setActiveIndex(null);
+            setShowEnding(true);
+            setJourneyPhase('ending');
+            return;
         }
 
-        return () => clearTimeout(autoPlayRef.current);
-    }, [isAutoPlaying, activeMemory]);
+        const mem = memories[idx];
 
-    // Gentle mouse parallax (desktop only)
+        if (mem.phase === 'distance-a') {
+            // Show the "Even when…" interstitial first
+            setActiveIndex(null);
+            setShowDistanceIntro(true);
+            setJourneyPhase('distanceIntro');
+
+            // After the intro has breathed (5 s), show distance-a
+            addTimer(() => {
+                setShowDistanceIntro(false);
+                setActiveIndex(idx);
+                setJourneyPhase('distanceA');
+            }, 5200);
+            return;
+        }
+
+        setActiveIndex(idx);
+        setJourneyPhase(mem.phase === 'climax' ? 'climax' : 'reveal');
+    }, []);
+
+    // ── handleMemoryDismiss: user tapped "let it pass" ────────
+    const handleMemoryDismiss = useCallback(() => {
+        if (activeIndex === null) return;
+        const nextIdx = activeIndex + 1;
+
+        // If we just finished distance-a, auto-show distance-b after a beat
+        if (memories[activeIndex].phase === 'distance-a') {
+            setActiveIndex(null);
+            addTimer(() => advanceTo(nextIdx), 1800);
+            return;
+        }
+
+        setActiveIndex(null);
+        // Small pause before next star brightens (sky decides)
+        addTimer(() => advanceTo(nextIdx), 2200);
+    }, [activeIndex, advanceTo]);
+
+    // ── climax auto-advance (no "let it pass" during climax) ──
     useEffect(() => {
-        if (window.innerWidth < 768) return;
+        if (journeyPhase === 'climax' && activeIndex !== null) {
+            // Climax memory stays up for 12 s, then advances on its own
+            addTimer(() => {
+                setActiveIndex(null);
+                // pause before ending
+                addTimer(() => {
+                    setShowEnding(true);
+                    setJourneyPhase('ending');
+                }, 3000);
+            }, 12000);
+        }
+    }, [journeyPhase, activeIndex]);
 
-        const handleMouseMove = (e) => {
-            if (activeMemory) return; // Disable during active memory
+    // ── restart ───────────────────────────────────────────────
+    const handleRestart = () => {
+        setShowEnding(false);
+        setActiveIndex(null);
+        setShowDistanceIntro(false);
+        setJourneyPhase('idle');
+        // Re-kick the entry sequence
+        addTimer(() => setJourneyPhase('entry'), 4500);
+        addTimer(() => setJourneyPhase('firstStar'), 8200);
+    };
 
-            const x = (e.clientX / window.innerWidth - 0.5) * 15;
-            const y = (e.clientY / window.innerHeight - 0.5) * 15;
+    // ── derive sky phase for BackgroundLayers ─────────────────
+    let skyPhase = 'night';
+    if (journeyPhase === 'distanceIntro' || journeyPhase === 'distanceA' || journeyPhase === 'distanceB') skyPhase = 'distance';
+    if (journeyPhase === 'climax') skyPhase = 'climax';
+    if (journeyPhase === 'ending') skyPhase = 'dawn';
 
-            gsap.to(skyRef.current, {
-                x: x,
-                y: y,
-                duration: 1.5,
-                ease: "power2.out"
-            });
-        };
+    // ── which star is interactable right now? ─────────────────
+    // Only the *next* star in sequence when no memory is showing.
+    let interactableIdx = null;
+    if (journeyPhase === 'firstStar' && activeIndex === null) interactableIdx = 0;
+    // After a memory is dismissed, briefly nothing is interactable
+    // (the parent handles auto-advance via timer).
 
-        window.addEventListener('mousemove', handleMouseMove);
-        return () => window.removeEventListener('mousemove', handleMouseMove);
-    }, [activeMemory]);
+    // ── render helpers ────────────────────────────────────────
+    const activeMemory = activeIndex !== null ? memories[activeIndex] : null;
+    const isClimax = activeMemory?.phase === 'climax';
 
     return (
-        <div
-            ref={containerRef}
-            className="relative w-full h-screen overflow-hidden selection:bg-purple-200/20 font-inter"
-        >
-            {/* Layer 0: Deep Space Background */}
-            <BackgroundLayers />
+        <div className="relative w-full h-screen overflow-hidden" style={{ fontFamily: "'Georgia', serif" }}>
+            {/* ── background ── */}
+            <BackgroundLayers skyPhase={skyPhase} />
 
-            {/* Layer 1: Shooting Stars */}
-            <ShootingStars />
+            {/* ── shooting stars (disabled during climax / ending) ── */}
+            <ShootingStars disabled={journeyPhase === 'climax' || journeyPhase === 'ending'} />
 
-            {/* Back Navigation */}
-            <Link
-                to="/templates"
-                className="absolute top-6 left-6 z-50 text-white/40 hover:text-white transition-all duration-300 p-2.5 rounded-full hover:bg-white/5 backdrop-blur-sm border border-white/0 hover:border-white/10 group"
+            {/* ── grain texture layer ── */}
+            <ConstellationLines />
+
+            {/* ── back nav (always present, quiet) ── */}
+            {/* <Link to="/templates" … > */}
+            <button
+                className="absolute top-5 left-5 text-white/25 hover:text-white/55 transition-colors p-2"
+                style={{ zIndex: 50, background: 'none', border: 'none', cursor: 'pointer' }}
             >
-                <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform duration-300" />
-            </Link>
+                <ArrowLeft size={18} />
+            </button>
 
-            {/* Header - Recipient Name */}
-            <div
-                ref={headerRef}
-                className="absolute top-8 left-0 right-0 text-center z-30 pointer-events-none px-6"
-            >
-                <h1 className="font-great-vibes text-4xl md:text-6xl lg:text-7xl text-white/95 tracking-wide opacity-0"
-                    style={{
-                        textShadow: '0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(200, 184, 232, 0.2)',
-                        filter: 'drop-shadow(0 2px 10px rgba(0, 0, 0, 0.3))'
-                    }}
+            {/* ── ENTRY LINE ── "This is the same sky we once stood under." ── */}
+            {(journeyPhase === 'entry' || journeyPhase === 'firstStar') && !showEnding && (
+                <div
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    style={{ zIndex: 22 }}
                 >
-                    Sarah's Memory Sky
-                </h1>
-                <p className="font-inter text-blue-100/50 text-xs md:text-sm mt-4 font-light tracking-[0.3em] uppercase opacity-0">
-                    Touch the stars to relive our journey
-                </p>
+                    <p
+                        className="text-white/50 text-center"
+                        style={{
+                            fontSize: 'clamp(0.9rem, 1.8vw, 1.15rem)',
+                            letterSpacing: '0.08em',
+                            animation: 'gentleFadeIn 2.5s ease forwards',
+                        }}
+                    >
+                        This is the same sky we once stood under.
+                    </p>
+                </div>
+            )}
+
+            {/* ── DISTANCE INTRO LINE ── */}
+            {showDistanceIntro && (
+                <div
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    style={{ zIndex: 22 }}
+                >
+                    <p
+                        className="text-white/45 text-center max-w-sm px-6"
+                        style={{
+                            fontSize: 'clamp(0.85rem, 1.6vw, 1.05rem)',
+                            letterSpacing: '0.06em',
+                            lineHeight: 1.9,
+                            animation: 'gentleFadeIn 2.2s ease forwards',
+                        }}
+                    >
+                        Even when we weren't together,<br />this sky was.
+                    </p>
+                </div>
+            )}
+
+            {/* ── STARS ── */}
+            <div className="absolute inset-0" style={{ zIndex: 20 }}>
+                {memories.map((mem, i) => {
+                    const isActive = activeIndex === i;
+                    const isInteractable = interactableIdx === i;
+                    // Dim rule: if any memory is active, everything else dims.
+                    // During distance intro, all dim.
+                    const isDimmed =
+                        showDistanceIntro ||
+                        (activeIndex !== null && activeIndex !== i) ||
+                        showEnding;
+
+                    return (
+                        <Star
+                            key={mem.id}
+                            x={mem.x}
+                            y={mem.y}
+                            size={mem.size}
+                            active={isActive}
+                            dimmed={isDimmed && !isActive}
+                            interactable={isInteractable}
+                            delay={i * 0.25}
+                            onClick={() => {
+                                if (isInteractable) advanceTo(i);
+                            }}
+                        />
+                    );
+                })}
             </div>
 
-            {/* Layer 2: Interactive Constellation (Zoomable/Pannable) */}
-            <div
-                ref={skyRef}
-                className="absolute inset-0 w-full h-full origin-center will-change-transform"
-                style={{ zIndex: 10 }}
-            >
-                {/* Constellation connecting lines */}
-                <ConstellationLines stars={mockMemories} />
-
-                {/* Memory stars */}
-                {mockMemories.map((mem, i) => (
-                    <Star
-                        key={mem.id}
-                        {...mem}
-                        delay={i * 0.3}
-                        active={activeMemory?.id === mem.id}
-                        onClick={() => handleStarClick(mem)}
-                    />
-                ))}
-            </div>
-
-            {/* Layer 3: Memory Card Modal */}
+            {/* ── MEMORY TEXT (painted into sky) ── */}
             {activeMemory && (
                 <MemoryCard
                     memory={activeMemory}
-                    onClose={handleCloseCard}
+                    onClose={handleMemoryDismiss}
+                    phase={isClimax ? 'climax' : 'normal'}
                 />
             )}
 
-            {/* Journey Controls */}
-            <div className="absolute bottom-10 left-0 right-0 flex justify-center z-40 pointer-events-none px-6">
-                <button
-                    onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-                    className={`
-                        pointer-events-auto flex items-center space-x-3 px-8 py-3.5 rounded-full
-                        bg-white/5 backdrop-blur-xl border border-white/10 
-                        text-white/90 hover:text-white
-                        hover:bg-white/10 hover:border-white/20
-                        transition-all duration-500 active:scale-95
-                        shadow-[0_0_30px_rgba(255,255,255,0.05)]
-                        group
-                    `}
-                >
-                    {isAutoPlaying ? (
-                        <Pause size={15} fill="white" className="opacity-80 group-hover:opacity-100 transition-opacity" />
-                    ) : (
-                        <Play size={15} fill="white" className="opacity-80 group-hover:opacity-100 transition-opacity" />
-                    )}
-                    <span className="font-inter text-xs md:text-sm tracking-[0.2em] font-medium uppercase">
-                        {isAutoPlaying ? "Pause Journey" : "Journey Through Time"}
-                    </span>
-                </button>
-            </div>
+            {/* ── ENDING ── */}
+            <EndingScreen show={showEnding} onRestart={handleRestart} />
 
-            {/* Layer 4: Ending Screen */}
-            <EndingScreen show={showEnding} />
-
-            {/* Depth particles (foreground, very subtle) */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 25 }}>
-                {[...Array(15)].map((_, i) => (
-                    <div
-                        key={`depth-${i}`}
-                        className="absolute w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-white/10 blur-[1px]"
-                        style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                            animation: `float ${8 + Math.random() * 4}s ease-in-out infinite`,
-                            animationDelay: `${Math.random() * 5}s`
-                        }}
-                    />
-                ))}
-            </div>
-
+            {/* ── shared keyframes ── */}
             <style>{`
-                @keyframes float {
-                    0%, 100% {
-                        transform: translateY(0) translateX(0);
-                        opacity: 0.1;
-                    }
-                    50% {
-                        transform: translateY(-30px) translateX(10px);
-                        opacity: 0.2;
-                    }
-                }
-
-                /* Smooth scrolling for any nested content */
-                * {
-                    scroll-behavior: smooth;
-                }
-
-                /* Custom font loading (Great Vibes for script) */
-                @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
-            `}</style>
+        @keyframes gentleFadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0);   }
+        }
+        @keyframes pulse-ring {
+          0%, 100% { opacity: 0.15; transform: translate(-50%,-50%) scale(1);   }
+          50%      { opacity: 0.35; transform: translate(-50%,-50%) scale(1.3);  }
+        }
+      `}</style>
         </div>
     );
 };

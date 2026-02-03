@@ -1,385 +1,212 @@
 import React, { useEffect, useRef } from 'react';
 
-const BackgroundLayers = () => {
+/**
+ * BackgroundLayers — REDESIGNED
+ *
+ * Design-doc rules enforced:
+ *   • Sky drifts slowly on its own (vertical auto-scroll).  The mouse
+ *     does NOT move it — "the sky ignores the user slightly."
+ *   • Stars are subtle, uneven, imperfect.  Many barely visible.
+ *   • Stars never pulse rhythmically.  Each one has its own very slow,
+ *     slightly-random opacity drift (not a shared keyframe).
+ *   • Noise / grain texture added for tactile imperfection.
+ *   • A `skyPhase` prop lets the parent shift atmosphere over the
+ *     journey:  'night' (default cool dark), 'distance' (slightly
+ *     warmer mid-tones), 'climax' (more stars, brighter bg),
+ *     'dawn' (subtle lightening).
+ */
+
+const BackgroundLayers = ({ skyPhase = 'night' }) => {
     const starsCanvasRef = useRef(null);
     const dustCanvasRef = useRef(null);
-    const twinkleCanvasRef = useRef(null);
+    const animFrameRef = useRef(null);
+    // Store star data so we can animate their individual opacities
+    const starsDataRef = useRef([]);
+    const timeRef = useRef(0);
 
-    // Draw Static Background Stars with varied colors
+    // ── phase-driven colours ──────────────────────────────────
+    const phaseStyles = {
+        night: { from: '#030916', mid: '#0f0e23', to: '#1a1535' },
+        distance: { from: '#050b1a', mid: '#151230', to: '#221e3d' },
+        climax: { from: '#080d1e', mid: '#151332', to: '#201b3a' },
+        dawn: { from: '#0e1224', mid: '#1e1d38', to: '#3a2f4e' },
+    };
+    const colors = phaseStyles[skyPhase] || phaseStyles.night;
+
+    // ── static + animated star layer ──────────────────────────
     useEffect(() => {
         const canvas = starsCanvasRef.current;
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
 
         const resize = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            drawStars();
+            generateStars();
         };
 
-        const drawStars = () => {
+        const generateStars = () => {
+            // More stars during climax
+            const count = skyPhase === 'climax'
+                ? (window.innerWidth < 768 ? 100 : 220)
+                : (window.innerWidth < 768 ? 55 : 130);
+
+            starsDataRef.current = Array.from({ length: count }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                // Imperfect radii — many are sub-pixel (barely visible)
+                r: Math.random() * 1.8 + 0.3,
+                baseOpacity: Math.random() * 0.35 + 0.1,   // 0.1–0.45
+                // Each star drifts on its own timeline
+                driftSpeed: Math.random() * 0.18 + 0.04,  // slow
+                driftOffset: Math.random() * Math.PI * 2,
+                // Very slight colour tint (white / pale gold)
+                warm: Math.random() > 0.65,
+            }));
+        };
+
+        const draw = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const count = window.innerWidth < 768 ? 60 : 120;
+            timeRef.current += 0.008; // advances ~once per frame at 60 fps
 
-            for (let i = 0; i < count; i++) {
-                const x = Math.random() * canvas.width;
-                const y = Math.random() * canvas.height;
-                const radius = Math.random() * 2 + 0.5; // 0.5-2.5px
-                const opacity = Math.random() * 0.4 + 0.2; // 0.2-0.6
-
-                // Varied star colors
-                const colors = [
-                    `rgba(255, 255, 255, ${opacity})`,      // White
-                    `rgba(232, 240, 255, ${opacity})`,      // Soft blue
-                    `rgba(255, 245, 225, ${opacity})`       // Pale gold
-                ];
-                const color = colors[Math.floor(Math.random() * colors.length)];
+            starsDataRef.current.forEach(s => {
+                // Slow sinusoidal drift — each star on its own phase & speed
+                const osc = Math.sin(timeRef.current * s.driftSpeed + s.driftOffset);
+                const opacity = s.baseOpacity + osc * 0.12; // very narrow swing
 
                 ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                ctx.fillStyle = color;
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fillStyle = s.warm
+                    ? `rgba(255, 242, 215, ${Math.max(0, opacity)})`
+                    : `rgba(225, 232, 250, ${Math.max(0, opacity)})`;
                 ctx.fill();
+            });
 
-                // Add subtle glow to some stars
-                if (Math.random() > 0.7) {
-                    ctx.shadowBlur = 2;
-                    ctx.shadowColor = color;
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                }
-            }
+            animFrameRef.current = requestAnimationFrame(draw);
         };
 
         window.addEventListener('resize', resize);
         resize();
+        draw();
 
-        return () => window.removeEventListener('resize', resize);
-    }, []);
+        return () => {
+            window.removeEventListener('resize', resize);
+            cancelAnimationFrame(animFrameRef.current);
+        };
+    }, [skyPhase]);
 
-    // Animate Stardust Particles with slower, more organic movement
+    // ── dust / stardust particles ─────────────────────────────
     useEffect(() => {
         const canvas = dustCanvasRef.current;
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        let animationFrame;
         let particles = [];
+        let frame;
 
-        const initParticles = () => {
-            particles = [];
-            const count = window.innerWidth < 768 ? 100 : 250;
-            for (let i = 0; i < count; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.15,
-                    vy: (Math.random() - 0.5) * 0.15,
-                    size: Math.random() * 1.2 + 0.3,
-                    opacity: Math.random() * 0.15 + 0.05, // Very subtle
-                    color: Math.random() > 0.7 ? '255, 240, 245' : '232, 240, 255'
-                });
-            }
+        const init = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const count = window.innerWidth < 768 ? 80 : 180;
+            particles = Array.from({ length: count }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.10,
+                vy: (Math.random() - 0.5) * 0.10,
+                r: Math.random() * 0.9 + 0.2,
+                o: Math.random() * 0.10 + 0.03,
+            }));
         };
 
         const render = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             particles.forEach(p => {
-                p.x += p.vx;
-                p.y += p.vy;
-
-                // Wrap around
+                p.x += p.vx; p.y += p.vy;
                 if (p.x < 0) p.x = canvas.width;
                 if (p.x > canvas.width) p.x = 0;
                 if (p.y < 0) p.y = canvas.height;
                 if (p.y > canvas.height) p.y = 0;
 
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${p.color}, ${p.opacity})`;
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(220, 228, 245, ${p.o})`;
                 ctx.fill();
             });
-
-            animationFrame = requestAnimationFrame(render);
+            frame = requestAnimationFrame(render);
         };
 
-        const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            initParticles();
-        };
-
-        window.addEventListener('resize', resize);
-        resize();
+        window.addEventListener('resize', init);
+        init();
         render();
-
-        return () => {
-            window.removeEventListener('resize', resize);
-            cancelAnimationFrame(animationFrame);
-        };
-    }, []);
-
-    // Twinkling Stars Animation (subset of background stars)
-    useEffect(() => {
-        const canvas = twinkleCanvasRef.current;
-        const ctx = canvas.getContext('2d');
-        let animationFrame;
-        let twinklers = [];
-
-        const initTwinklers = () => {
-            twinklers = [];
-            const count = window.innerWidth < 768 ? 8 : 15;
-
-            for (let i = 0; i < count; i++) {
-                twinklers.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    baseOpacity: Math.random() * 0.3 + 0.3,
-                    targetOpacity: Math.random() * 0.7 + 0.3,
-                    currentOpacity: 0.3,
-                    speed: Math.random() * 0.01 + 0.005,
-                    direction: 1,
-                    radius: Math.random() * 1.5 + 0.5
-                });
-            }
-        };
-
-        const render = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            twinklers.forEach(t => {
-                // Oscillate opacity
-                t.currentOpacity += t.speed * t.direction;
-
-                if (t.currentOpacity >= t.targetOpacity) {
-                    t.direction = -1;
-                } else if (t.currentOpacity <= t.baseOpacity) {
-                    t.direction = 1;
-                }
-
-                ctx.beginPath();
-                ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${t.currentOpacity})`;
-                ctx.shadowBlur = 3;
-                ctx.shadowColor = `rgba(255, 255, 255, ${t.currentOpacity})`;
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            });
-
-            animationFrame = requestAnimationFrame(render);
-        };
-
-        const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            initTwinklers();
-        };
-
-        window.addEventListener('resize', resize);
-        resize();
-        render();
-
-        return () => {
-            window.removeEventListener('resize', resize);
-            cancelAnimationFrame(animationFrame);
-        };
+        return () => { window.removeEventListener('resize', init); cancelAnimationFrame(frame); };
     }, []);
 
     return (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-            {/* Layer 1: Deep Space Gradient with radial overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#050B1F] via-[#1A1347] to-[#2D1B4E]">
-                {/* Central depth radial gradient */}
-                <div
-                    className="absolute inset-0 opacity-15"
-                    style={{
-                        background: 'radial-gradient(circle at center, rgba(88, 66, 124, 0.3) 0%, transparent 70%)'
-                    }}
-                />
-            </div>
-
-            {/* Layer 2: Atmospheric Nebula Glows (Multiple) */}
-            <div className="absolute top-0 right-[10%] w-[400px] h-[400px] bg-purple-600/8 blur-[120px] rounded-full" />
-            <div className="absolute top-[30%] left-[5%] w-[500px] h-[500px] bg-indigo-600/12 blur-[100px] rounded-full" />
-            <div className="absolute bottom-[20%] right-[15%] w-[350px] h-[350px] bg-violet-500/6 blur-[80px] rounded-full" />
-
-            {/* Layer 3: Milky Way Diagonal Band */}
+        <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
+            {/* ── base gradient (phase-aware) ── */}
             <div
-                className="absolute inset-0 opacity-[0.04]"
+                className="absolute inset-0"
                 style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' fill='%23C8B8E8'/%3E%3C/svg%3E")`,
-                    transform: 'rotate(25deg) scale(1.8)',
-                    transformOrigin: 'center',
-                    filter: 'blur(60px)',
-                    width: '150%',
-                    height: '150%',
-                    left: '-25%',
-                    top: '-25%'
+                    background: `linear-gradient(to bottom, ${colors.from} 0%, ${colors.mid} 50%, ${colors.to} 100%)`,
+                    transition: 'background 4s ease',  // smooth phase transitions
                 }}
             />
 
-            {/* Layer 4: Distant Static Stars (Canvas) */}
+            {/* Subtle nebula glow – intentionally understated */}
+            <div className="absolute top-[12%] right-[8%]  w-[320px] h-[320px] rounded-full"
+                style={{ background: 'radial-gradient(circle, rgba(80,60,120,0.07) 0%, transparent 70%)', filter: 'blur(90px)' }} />
+            <div className="absolute top-[45%] left-[3%]  w-[400px] h-[400px] rounded-full"
+                style={{ background: 'radial-gradient(circle, rgba(60,55,100,0.09) 0%, transparent 70%)', filter: 'blur(80px)' }} />
+            <div className="absolute bottom-[15%] right-[20%] w-[280px] h-[280px] rounded-full"
+                style={{ background: 'radial-gradient(circle, rgba(70,50,105,0.05) 0%, transparent 70%)', filter: 'blur(70px)' }} />
+
+            {/* ── star canvas (animated opacity drift) ── */}
             <canvas
                 ref={starsCanvasRef}
-                className="absolute inset-0 w-full h-full opacity-50"
-            />
-
-            {/* Layer 4.5: Twinkling Stars Subset */}
-            <canvas
-                ref={twinkleCanvasRef}
                 className="absolute inset-0 w-full h-full"
+                style={{ opacity: skyPhase === 'dawn' ? 0.55 : 0.7, transition: 'opacity 5s ease' }}
             />
 
-            {/* Layer 5: Stardust Particles (Canvas) */}
+            {/* ── dust canvas ── */}
             <canvas
                 ref={dustCanvasRef}
                 className="absolute inset-0 w-full h-full"
             />
 
-            {/* Layer 6: Nebula Cloud Overlays (Very Subtle) */}
+            {/* ── SVG noise grain over everything ── */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.06, mixBlendMode: 'overlay' }} aria-hidden="true">
+                <filter id="bg-grain">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" />
+                    <feColorMatrix type="saturate" values="0" />
+                </filter>
+                <rect width="100%" height="100%" filter="url(#bg-grain)" />
+            </svg>
+
+            {/* ── slow vertical drift wrapper ──
+           The sky scrolls upward on its own at ~40 px / 60 s.
+           This is a pure CSS animation — no JS, no mouse.          */}
+            <style>{`
+        /* Not applied to canvases (they re-draw each frame already)
+           but applied to the nebula glows via .drift-layer */
+        @keyframes sky-drift {
+          0%   { transform: translateY(0); }
+          100% { transform: translateY(-60px); }
+        }
+      `}</style>
+            {/* Invisible drift nudger — the nebula divs above sit inside
+          the normal flow and already animate via the canvas loop.
+          For the CSS glows we use a wrapper: */}
             <div
-                className="absolute top-[15%] left-[20%] w-[700px] h-[500px] opacity-[0.08] pointer-events-none"
-                style={{
-                    background: 'radial-gradient(ellipse, #4B3A6B 0%, transparent 60%)',
-                    filter: 'blur(100px)',
-                    transform: 'rotate(-15deg)'
-                }}
-            />
-            <div
-                className="absolute bottom-[25%] right-[10%] w-[600px] h-[400px] opacity-[0.06] pointer-events-none"
-                style={{
-                    background: 'radial-gradient(ellipse, #3D2F5B 0%, transparent 65%)',
-                    filter: 'blur(90px)',
-                    transform: 'rotate(20deg)'
-                }}
-            />
+                className="absolute inset-0 pointer-events-none"
+                style={{ animation: 'sky-drift 90s linear infinite' }}
+            >
+                {/* duplicate nebula glows that drift */}
+                <div className="absolute top-[25%] left-[15%] w-[350px] h-[350px] rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(65,55,95,0.06) 0%, transparent 70%)', filter: 'blur(85px)' }} />
+                <div className="absolute top-[60%] right-[12%] w-[300px] h-[300px] rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(75,60,110,0.05) 0%, transparent 70%)', filter: 'blur(75px)' }} />
+            </div>
         </div>
     );
 };
 
 export default BackgroundLayers;
-// import React, { useEffect, useRef } from 'react';
-
-// const BackgroundLayers = () => {
-//     const starsCanvasRef = useRef(null);
-//     const dustCanvasRef = useRef(null);
-
-//     // Draw Static Background Stars
-//     useEffect(() => {
-//         const canvas = starsCanvasRef.current;
-//         const ctx = canvas.getContext('2d');
-
-//         const resize = () => {
-//             canvas.width = window.innerWidth;
-//             canvas.height = window.innerHeight;
-//             drawStars();
-//         };
-
-//         const drawStars = () => {
-//             ctx.clearRect(0, 0, canvas.width, canvas.height);
-//             const count = window.innerWidth < 768 ? 50 : 120; // Reduced on mobile
-
-//             for (let i = 0; i < count; i++) {
-//                 const x = Math.random() * canvas.width;
-//                 const y = Math.random() * canvas.height;
-//                 const radius = Math.random() * 1.5;
-//                 const opacity = Math.random() * 0.5 + 0.1;
-
-//                 ctx.beginPath();
-//                 ctx.arc(x, y, radius, 0, Math.PI * 2);
-//                 ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-//                 ctx.fill();
-//             }
-//         };
-
-//         window.addEventListener('resize', resize);
-//         resize();
-
-//         return () => window.removeEventListener('resize', resize);
-//     }, []);
-
-//     // Animate Stardust
-//     useEffect(() => {
-//         const canvas = dustCanvasRef.current;
-//         const ctx = canvas.getContext('2d');
-//         let animationFrame;
-//         let particles = [];
-
-//         const initParticles = () => {
-//             particles = [];
-//             const count = window.innerWidth < 768 ? 80 : 250; // Responsive count
-//             for (let i = 0; i < count; i++) {
-//                 particles.push({
-//                     x: Math.random() * canvas.width,
-//                     y: Math.random() * canvas.height,
-//                     vx: (Math.random() - 0.5) * 0.2, // Very slow drift
-//                     vy: (Math.random() - 0.5) * 0.2,
-//                     size: Math.random() * 1.2,
-//                     color: Math.random() > 0.8 ? '255, 240, 245' : '232, 240, 255' // Pale pink or blue
-//                 });
-//             }
-//         };
-
-//         const render = () => {
-//             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-//             particles.forEach(p => {
-//                 p.x += p.vx;
-//                 p.y += p.vy;
-
-//                 // Wrap around
-//                 if (p.x < 0) p.x = canvas.width;
-//                 if (p.x > canvas.width) p.x = 0;
-//                 if (p.y < 0) p.y = canvas.height;
-//                 if (p.y > canvas.height) p.y = 0;
-
-//                 ctx.beginPath();
-//                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-//                 ctx.fillStyle = `rgba(${p.color}, 0.2)`; // Low opacity
-//                 ctx.fill();
-//             });
-
-//             animationFrame = requestAnimationFrame(render);
-//         };
-
-//         const resize = () => {
-//             canvas.width = window.innerWidth;
-//             canvas.height = window.innerHeight;
-//             initParticles();
-//         };
-
-//         window.addEventListener('resize', resize);
-//         resize();
-//         render();
-
-//         return () => {
-//             window.removeEventListener('resize', resize);
-//             cancelAnimationFrame(animationFrame);
-//         };
-//     }, []);
-
-//     return (
-//         <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
-//             {/* Layer 1: Deep Space Gradient (CSS) */}
-//             <div className="absolute inset-0 bg-gradient-to-b from-[#050B1F] via-[#1A1347] to-[#2D1B4E]" />
-
-//             {/* Layer 2: Atmospheric Glow (Nebulae) */}
-//             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/10 blur-[120px] rounded-full mix-blend-screen" />
-//             <div className="absolute bottom-0 left-20 w-[600px] h-[600px] bg-indigo-500/10 blur-[100px] rounded-full mix-blend-screen" />
-
-//             {/* Layer 3: Milky Way Texture */}
-//             <div
-//                 className="absolute inset-0 opacity-5"
-//                 style={{
-//                     backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-//                     transform: 'rotate(25deg) scale(1.5)',
-//                 }}
-//             />
-
-//             {/* Layer 4: Distant Stars (Canvas) */}
-//             <canvas ref={starsCanvasRef} className="absolute inset-0 w-full h-full opacity-60" />
-
-//             {/* Layer 5: Stardust Particles (Canvas) */}
-//             <canvas ref={dustCanvasRef} className="absolute inset-0 w-full h-full" />
-//         </div>
-//     );
-// };
-
-// export default BackgroundLayers;
