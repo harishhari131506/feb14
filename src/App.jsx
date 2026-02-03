@@ -1,15 +1,18 @@
 import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { smoothScroll } from './utils/lenis';
 import './animations/gsapSetup';
 
-import Hero from './components/sections/Hero';
-import HowItWorks from './components/sections/HowItWorks';
-import TemplateShowcase from './components/sections/TemplateShowcase';
-import Features from './components/sections/Features';
-import SocialProof from './components/sections/SocialProof';
-
-import { Urgency, FinalCTA } from './components/sections/FinalSections';
 import Navbar from './components/layout/Navbar';
+import LandingPage from './pages/LandingPage';
+import TemplatesPage from './pages/TemplatesPage';
+import MemoryConstellation from './components/templates/MemoryConstellation';
+import ScrollToTop from './components/utils/ScrollToTop';
+
+// Simple ScrollToTop component to ensure pages start at top on navigation
+const ScrollHandler = () => {
+  return <ScrollToTop />;
+};
 
 function App() {
   useEffect(() => {
@@ -20,18 +23,24 @@ function App() {
   }, []);
 
   return (
-    <div className="w-full min-h-screen bg-soft-white overflow-hidden selection:bg-rose-gold/20 selection:text-soft-black">
-      <Navbar />
-      <main>
-        <Hero />
-        <HowItWorks />
-        <TemplateShowcase />
-        <Features />
-        <SocialProof />
-        <Urgency />
-        <FinalCTA />
-      </main>
-    </div>
+    <Router>
+      <ScrollHandler />
+      <div className="w-full min-h-screen bg-soft-white overflow-hidden selection:bg-rose-gold/20 selection:text-soft-black">
+        {/* Navbar needs to handle being hidden or styled differently on immersive pages like MemoryConstellation 
+            For simplicity, we might conditionally render it or let the page cover it. 
+            The MemoryConstellation page has z-index that covers everything, but Navbar is fixed z-50.
+            Let's keep Navbar for standard pages, but maybe suppress it for full-screen templates if needed?
+            Or we just let it be efficiently hidden by CSS if we want.
+            For now, I'll direct render Routes. Landing and Templates will have Navbar. 
+            MemoryConstellation might imply no standard navbar.
+        */}
+        <Routes>
+          <Route path="/" element={<><Navbar /><LandingPage /></>} />
+          <Route path="/templates" element={<><Navbar /><TemplatesPage /></>} />
+          <Route path="/templates/memory-constellation" element={<MemoryConstellation />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
