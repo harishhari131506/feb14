@@ -15,7 +15,8 @@ const templates = [
         description: "A classic design with deep reds and elegant typography for timeless love.",
         image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070&auto=format&fit=crop",
         tags: ["Classic", "Elegant", "Red"],
-        color: "bg-red-500"
+        color: "bg-red-500",
+        link: "/templates/eternal-romance"
     },
     {
         id: 2,
@@ -59,7 +60,7 @@ const templates = [
     }
 ];
 
-const TemplateCard = ({ title, description, image, tags, index }) => {
+const TemplateCard = ({ title, description, image, tags, index, link }) => {
     const cardRef = useRef(null);
     const [isHovered, setIsHovered] = useState(false);
 
@@ -135,8 +136,12 @@ const TemplateCard = ({ title, description, image, tags, index }) => {
                         <Button
                             className="w-full justify-between group-hover:bg-rose-gold group-hover:text-white transition-all duration-300"
                             onClick={() => {
-                                // For demo purposes, we'll link the first template or just all to the demo
-                                window.location.href = '/templates/memory-constellation';
+                                if (link) {
+                                    window.location.href = link;
+                                } else {
+                                    // Fallback for templates without specific links yet
+                                    window.location.href = '/templates/memory-constellation';
+                                }
                             }}
                             icon={Sparkles}
                         >

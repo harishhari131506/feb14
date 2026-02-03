@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '../../utils/cn';
+import { useMagneticPhysics } from '../../hooks/usePhysics';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
-const Button = ({ children, onClick, variant = 'primary', className = '' }) => {
+const Button = ({ children, onClick, variant = 'primary', className = '', magnetic = false }) => {
+    const buttonRef = useRef(null);
+    const prefersReducedMotion = useReducedMotion();
+    const { springs, handleMouseMove, handleMouseLeave } = useMagneticPhysics(
+        magnetic ? 0.3 : 0,
+        100
+    );
+
     const baseStyles = "relative px-10 py-4 rounded-full font-medium text-base transition-all duration-500 overflow-hidden cursor-pointer";
 
     const variants = {
@@ -13,31 +22,37 @@ const Button = ({ children, onClick, variant = 'primary', className = '' }) => {
 
     return (
         <motion.button
-            whileHover={{
+            ref={buttonRef}
+            onMouseMove={(e) => magnetic && handleMouseMove(e, buttonRef.current)}
+            onMouseLeave={handleMouseLeave}
+            style={{
+                ...springs,
+                fontFamily: "'Inter', -apple-system, sans-serif",
+                letterSpacing: "0.02em"
+            }}
+            whileHover={!prefersReducedMotion ? {
                 scale: 1.05,
                 transition: {
                     duration: 0.3,
                     ease: [0.22, 1, 0.36, 1]
                 }
-            }}
-            whileTap={{
+            } : {}}
+            whileTap={!prefersReducedMotion ? {
                 scale: 0.97,
                 transition: { duration: 0.1 }
-            }}
+            } : {}}
             className={cn(baseStyles, variants[variant], className)}
             onClick={onClick}
-            style={{
-                fontFamily: "'Inter', -apple-system, sans-serif",
-                letterSpacing: "0.02em"
-            }}
         >
             {/* Shimmer effect on hover */}
-            <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                initial={{ x: '-100%' }}
-                whileHover={{ x: '100%' }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-            />
+            {!prefersReducedMotion && (
+                <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    initial={{ x: '-100%' }}
+                    whileHover={{ x: '100%' }}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                />
+            )}
 
             <span className="relative z-10 inline-flex items-center gap-2">
                 {children}
