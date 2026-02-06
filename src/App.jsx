@@ -8,6 +8,7 @@ import LandingPage from './pages/LandingPage';
 import TemplatesPage from './pages/TemplatesPage';
 import MemoryConstellation from './components/templates/MemoryConstellation';
 import EternalRomance from './components/templates/EternalRomance/EternalRomance';
+import TestPage from './pages/TestPage';
 import ScrollToTop from './components/utils/ScrollToTop';
 import CustomCursor from './components/animations/CustomCursor';
 import ScrollProgress from './components/animations/ScrollProgress';
@@ -38,7 +39,7 @@ function App() {
         <ScrollProgress />
         <AnimatedGrain />
         <SoundToggle />
-        
+
         {/* Navbar needs to handle being hidden or styled differently on immersive pages like MemoryConstellation 
             For simplicity, we might conditionally render it or let the page cover it. 
             The MemoryConstellation page has z-index that covers everything, but Navbar is fixed z-50.
@@ -53,6 +54,7 @@ function App() {
             <Route path="/templates" element={<><Navbar /><TemplatesPage /></>} />
             <Route path="/templates/memory-constellation" element={<MemoryConstellation />} />
             <Route path="/templates/eternal-romance" element={<EternalRomance />} />
+            <Route path="/test" element={<TestPage />} />
           </Routes>
         </PageTransition>
       </div>

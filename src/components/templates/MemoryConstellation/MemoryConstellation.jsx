@@ -6,314 +6,271 @@ import ConstellationLines from './ConstellationLines';
 import MemoryCard from './MemoryCard';
 import EndingScreen from './EndingScreen';
 import { ArrowLeft } from 'lucide-react';
-// import { Link }         from 'react-router-dom';   // uncomment if using react-router
 
 // ─────────────────────────────────────────────────────────────
-//  MEMORY DATA   (replace with real content)
-//  Each memory has a `phase` hint that the orchestrator uses:
-//    'normal'   – standard reveal
-//    'distance' – the paired-star "same sky, different places" beat
-//    'climax'   – the heavy, longer, no-interaction memory
+//  SCENE DATA
 // ─────────────────────────────────────────────────────────────
-const memories = [
-    {
-        id: 1, x: 18, y: 55, size: 'small',
-        date: 'Oct 14, 2023',
-        title: 'The First Hello',
-        description: 'That night you laughed\nwithout knowing why.',
-        phase: 'normal',
-    },
-    {
-        id: 2, x: 30, y: 28, size: 'medium',
-        date: 'Nov 02, 2023',
-        title: 'Coffee Date',
-        description: 'We didn\'t say much.\nBut neither of us wanted to go inside.',
-        phase: 'normal',
-    },
-    {
-        id: 3, x: 48, y: 68, size: 'small',
-        date: 'Dec 24, 2023',
-        title: 'Christmas Eve',
-        description: 'The world was loud\nand we were the only quiet thing in it.',
-        phase: 'normal',
-    },
-    // ── DISTANCE beat (paired stars) ──
-    {
-        id: 4, x: 22, y: 40, size: 'medium',
-        date: 'Feb 03, 2024',
-        title: 'Apart',
-        description: 'You looked up from there.',
-        phase: 'distance-a',   // first of the pair
-    },
-    {
-        id: 5, x: 75, y: 35, size: 'medium',
-        date: 'Feb 03, 2024',
-        title: 'Apart',
-        description: 'I looked up from here.',
-        phase: 'distance-b',   // second of the pair
-    },
-    // ── CLIMAX ──
-    {
-        id: 6, x: 55, y: 58, size: 'large',
-        date: 'May 20, 2024',
-        title: 'The Night That Changed Everything',
-        description: 'Some nights don\'t pass.\nThey stay.\n\nWe knew it then.\nWe still know it now.',
-        phase: 'climax',
-    },
+// Scene 2: The First Star
+const scene2Data = {
+    id: 'scene2', x: 50, y: 50, size: 'medium',
+    text: "So stood we once—\nunremarked by the world.", // Shown near star 
+    reveal: "Yet infinite to one another." // Shown in card
+};
+
+// Scene 3: The Remembering
+const scene3Data = {
+    id: 'scene3', x: 25, y: 40, size: 'small',
+    // Shown in card
+    reveal: "We spoke of nothing.\n\nAnd in that nothing—\n\nfound all the world."
+};
+
+// Scene 4: The Passing of Time
+const scene4Data = {
+    id: 'scene4', x: 75, y: 65, size: 'medium',
+    reveal: "Thus love proceeds:\nnot by return,\nbut by continuation."
+};
+
+// Scene 5: Of Distance (Pair)
+const scene5Data = [
+    { id: 'scene5a', x: 20, y: 30, size: 'small', reveal: "You looked up from there." },
+    { id: 'scene5b', x: 80, y: 30, size: 'small', reveal: "I looked up from here." }
 ];
 
-// ─────────────────────────────────────────────────────────────
-//  JOURNEY PHASES  (high-level orchestration states)
-//    idle          – screen just loaded, nothing has happened yet
-//    entry         – the opening line is showing
-//    firstStar     – waiting for user to click (or auto-advance)
-//                    the first interactable star
-//    reveal        – a memory is being shown
-//    distanceIntro – the "Even when we weren't together…" line
-//    distanceA     – first paired star shown
-//    distanceB     – second paired star shown
-//    climax        – the heavy climax memory (no interaction)
-//    ending        – dawn / final text
-// ─────────────────────────────────────────────────────────────
+// Scene 6: The Night That Would Not Pass (Climax)
+const scene6Data = {
+    id: 'scene6', x: 50, y: 45, size: 'large',
+    reveal: "Some moments are not lived.\n\nThey are kept."
+};
+
 
 const MemoryConstellation = () => {
     // ── state ─────────────────────────────────────────────────
-    const [journeyPhase, setJourneyPhase] = useState('idle');
-    const [activeIndex, setActiveIndex] = useState(null);  // index into memories[]
-    const [showDistanceIntro, setShowDistanceIntro] = useState(false);
-    const [showEnding, setShowEnding] = useState(false);
+    // 'prologue-1' | 'prologue-2' | 'waiting-first' | 'first-revealed'
+    // 'scene3-waiting' | 'scene3-revealed'
+    // 'scene4-waiting' | 'scene4-revealed'
+    // 'scene5-waiting' | 'scene5a-revealed' | 'scene5b-revealed' | 'scene5-both-revealed' | 'scene5-final'
+    // 'scene6-waiting' | 'scene6-revealed'
+    // 'fading' | 'epilogue'
+    const [phase, setPhase] = useState('prologue-1');
 
-    // Timers we need to clear on unmount
+    const [activeCard, setActiveCard] = useState(null); // { reveal: string, ... }
+    const [introText, setIntroText] = useState(null); // Center screen text for prologue
+
+    // Timers
     const timersRef = useRef([]);
     const addTimer = (fn, ms) => {
         const id = setTimeout(fn, ms);
         timersRef.current.push(id);
         return id;
     };
-
-    // ── cleanup ───────────────────────────────────────────────
     useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
 
-    // ── PHASE 1: ENTRY  (idle → entry) ────────────────────────
-    // After 4.5 s the opening line fades in; after another 3.5 s
-    // the first star becomes interactable.
+    // ── SCENE 1: PROLOGUE ─────────────────────────────────────
     useEffect(() => {
-        addTimer(() => setJourneyPhase('entry'), 4500);
-        addTimer(() => setJourneyPhase('firstStar'), 8200);
-    }, []);  // mount only
+        // "Soft night attends thee."
+        addTimer(() => setIntroText("Soft night attends thee."), 2000);
+        addTimer(() => setIntroText(null), 6000);
 
-    // ── PHASE MACHINE: what happens when journeyPhase changes ─
-    useEffect(() => {
-        if (journeyPhase === 'firstStar') {
-            // Auto-advance to first memory after 6 s of showing the star
-            // (the star brightens on its own — "the sky decides")
-            addTimer(() => advanceTo(0), 6000);
-        }
-    }, [journeyPhase]);
+        // "Above thee spreads the ancient vault."
+        addTimer(() => setIntroText("Above thee spreads the ancient vault."), 7500);
+        addTimer(() => setIntroText(null), 12500);
 
-    // ── advanceTo: move to the next memory in sequence ────────
-    const advanceTo = useCallback((idx) => {
-        if (idx >= memories.length) {
-            // journey is over → trigger ending
-            setActiveIndex(null);
-            setShowEnding(true);
-            setJourneyPhase('ending');
-            return;
-        }
-
-        const mem = memories[idx];
-
-        if (mem.phase === 'distance-a') {
-            // Show the "Even when…" interstitial first
-            setActiveIndex(null);
-            setShowDistanceIntro(true);
-            setJourneyPhase('distanceIntro');
-
-            // After the intro has breathed (5 s), show distance-a
-            addTimer(() => {
-                setShowDistanceIntro(false);
-                setActiveIndex(idx);
-                setJourneyPhase('distanceA');
-            }, 5200);
-            return;
-        }
-
-        setActiveIndex(idx);
-        setJourneyPhase(mem.phase === 'climax' ? 'climax' : 'reveal');
+        // Transition to Scene 2
+        addTimer(() => setPhase('waiting-first'), 14000);
     }, []);
 
-    // ── handleMemoryDismiss: user tapped "let it pass" ────────
-    const handleMemoryDismiss = useCallback(() => {
-        if (activeIndex === null) return;
-        const nextIdx = activeIndex + 1;
+    // ── ACTION HANDLERS ───────────────────────────────────────
 
-        // If we just finished distance-a, auto-show distance-b after a beat
-        if (memories[activeIndex].phase === 'distance-a') {
-            setActiveIndex(null);
-            addTimer(() => advanceTo(nextIdx), 1800);
-            return;
-        }
+    // Scene 2 Click
+    const handleScene2Click = () => {
+        setPhase('first-revealed');
+        setActiveCard({
+            description: scene2Data.reveal,
+            date: '' // No date in this design
+        });
 
-        setActiveIndex(null);
-        // Small pause before next star brightens (sky decides)
-        addTimer(() => advanceTo(nextIdx), 2200);
-    }, [activeIndex, advanceTo]);
-
-    // ── climax auto-advance (no "let it pass" during climax) ──
-    useEffect(() => {
-        if (journeyPhase === 'climax' && activeIndex !== null) {
-            // Climax memory stays up for 12 s, then advances on its own
-            addTimer(() => {
-                setActiveIndex(null);
-                // pause before ending
-                addTimer(() => {
-                    setShowEnding(true);
-                    setJourneyPhase('ending');
-                }, 3000);
-            }, 12000);
-        }
-    }, [journeyPhase, activeIndex]);
-
-    // ── restart ───────────────────────────────────────────────
-    const handleRestart = () => {
-        setShowEnding(false);
-        setActiveIndex(null);
-        setShowDistanceIntro(false);
-        setJourneyPhase('idle');
-        // Re-kick the entry sequence
-        addTimer(() => setJourneyPhase('entry'), 4500);
-        addTimer(() => setJourneyPhase('firstStar'), 8200);
+        // Auto-close after reading (6s)
+        addTimer(() => {
+            setActiveCard(null);
+            // Move to Scene 3
+            addTimer(() => setPhase('scene3-waiting'), 2000);
+        }, 6000);
     };
 
-    // ── derive sky phase for BackgroundLayers ─────────────────
+    // Scene 3 Click
+    const handleScene3Click = () => {
+        setPhase('scene3-revealed');
+        setActiveCard({ description: scene3Data.reveal, date: '' });
+
+        // Auto-close (8s - longer text)
+        addTimer(() => {
+            setActiveCard(null);
+            // Move to Scene 4
+            addTimer(() => setPhase('scene4-waiting'), 2000);
+        }, 8000);
+    };
+
+    // Scene 4 Click
+    const handleScene4Click = () => {
+        setPhase('scene4-revealed');
+        setActiveCard({ description: scene4Data.reveal, date: '' });
+
+        // Auto-close (6s)
+        addTimer(() => {
+            setActiveCard(null);
+            // Move to Scene 5
+            addTimer(() => setPhase('scene5-waiting'), 2000);
+        }, 6500);
+    };
+
+    // Scene 5 Clicks
+    const [scene5State, setScene5State] = useState({ a: false, b: false });
+
+    const handleScene5Click = (part) => {
+        if (part === 'a') {
+            setActiveCard({ description: scene5Data[0].reveal, date: '' });
+            setScene5State(prev => ({ ...prev, a: true }));
+        } else {
+            setActiveCard({ description: scene5Data[1].reveal, date: '' });
+            setScene5State(prev => ({ ...prev, b: true }));
+        }
+
+        // Close individual card quickly
+        addTimer(() => setActiveCard(null), 3500);
+    };
+
+    useEffect(() => {
+        if (scene5State.a && scene5State.b && phase === 'scene5-waiting') {
+            // Both clicked
+            setPhase('scene5-both-done');
+            addTimer(() => {
+                setIntroText("Yet the sky held us both."); // Center text for unification
+                addTimer(() => {
+                    setIntroText(null);
+                    setPhase('scene6-waiting');
+                }, 5000);
+            }, 4000);
+        }
+    }, [scene5State, phase]);
+
+
+    // Scene 6 Click (Climax)
+    const handleScene6Click = () => {
+        setPhase('scene6-revealed');
+        setActiveCard({ description: scene6Data.reveal, date: '' });
+
+        // Long hold (10s)
+        addTimer(() => {
+            setActiveCard(null);
+            setPhase('fading'); // Scene 7
+
+            // Scene 7: Fading Stars -> Scene 8: Epilogue
+            // "Not as deserters..." text handled by introText or EndingScreen? 
+            // Let's use introText for the transition line, then EndingScreen.
+            addTimer(() => {
+                setIntroText("Not as deserters,\nbut as guardians relieved of duty.");
+                addTimer(() => {
+                    setIntroText(null);
+                    setPhase('epilogue');
+                }, 6000);
+            }, 2000);
+
+        }, 10000);
+    };
+
+    // ── RESTART ──────────────────────────────────────────────
+    const handleRestart = () => {
+        window.location.reload(); // Simplest full reset to "Prologue"
+    };
+
+    // ── RENDER HELPERS ───────────────────────────────────────
     let skyPhase = 'night';
-    if (journeyPhase === 'distanceIntro' || journeyPhase === 'distanceA' || journeyPhase === 'distanceB') skyPhase = 'distance';
-    if (journeyPhase === 'climax') skyPhase = 'climax';
-    if (journeyPhase === 'ending') skyPhase = 'dawn';
-
-    // ── which star is interactable right now? ─────────────────
-    // Only the *next* star in sequence when no memory is showing.
-    let interactableIdx = null;
-    if (journeyPhase === 'firstStar' && activeIndex === null) interactableIdx = 0;
-    // After a memory is dismissed, briefly nothing is interactable
-    // (the parent handles auto-advance via timer).
-
-    // ── render helpers ────────────────────────────────────────
-    const activeMemory = activeIndex !== null ? memories[activeIndex] : null;
-    const isClimax = activeMemory?.phase === 'climax';
+    if (phase.includes('scene5')) skyPhase = 'distance';
+    if (phase.includes('scene6')) skyPhase = 'climax';
+    if (phase === 'fading' || phase === 'epilogue') skyPhase = 'dawn';
 
     return (
         <div className="relative w-full h-screen overflow-hidden" style={{ fontFamily: "'Georgia', serif" }}>
-            {/* ── background ── */}
             <BackgroundLayers skyPhase={skyPhase} />
-
-            {/* ── shooting stars (disabled during climax / ending) ── */}
-            <ShootingStars disabled={journeyPhase === 'climax' || journeyPhase === 'ending'} />
-
-            {/* ── grain texture layer ── */}
+            <ShootingStars disabled={phase === 'scene6-revealed' || phase === 'epilogue'} />
             <ConstellationLines />
 
-            {/* ── back nav (always present, quiet) ── */}
-            {/* <Link to="/templates" … > */}
-            <button
-                className="absolute top-5 left-5 text-white/25 hover:text-white/55 transition-colors p-2"
-                style={{ zIndex: 50, background: 'none', border: 'none', cursor: 'pointer' }}
-            >
+            {/* Back Nav */}
+            <button className="absolute top-5 left-5 text-white/20 hover:text-white/50 transition-colors p-2 z-50">
                 <ArrowLeft size={18} />
             </button>
 
-            {/* ── ENTRY LINE ── "This is the same sky we once stood under." ── */}
-            {(journeyPhase === 'entry' || journeyPhase === 'firstStar') && !showEnding && (
-                <div
-                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    style={{ zIndex: 22 }}
-                >
-                    <p
-                        className="text-white/50 text-center"
-                        style={{
-                            fontSize: 'clamp(0.9rem, 1.8vw, 1.15rem)',
-                            letterSpacing: '0.08em',
-                            animation: 'gentleFadeIn 2.5s ease forwards',
-                        }}
-                    >
-                        This is the same sky we once stood under.
+            {/* ── CENTER TEXT OVERLAY (Prologue, Distance Unification, Fading) ── */}
+            {introText && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
+                    <p className="text-white/60 text-center px-6 leading-loose"
+                        style={{ fontSize: '1.1rem', letterSpacing: '0.08em', animation: 'gentleFadeIn 2s ease forwards' }}>
+                        {introText}
                     </p>
                 </div>
             )}
 
-            {/* ── DISTANCE INTRO LINE ── */}
-            {showDistanceIntro && (
-                <div
-                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    style={{ zIndex: 22 }}
-                >
-                    <p
-                        className="text-white/45 text-center max-w-sm px-6"
-                        style={{
-                            fontSize: 'clamp(0.85rem, 1.6vw, 1.05rem)',
-                            letterSpacing: '0.06em',
-                            lineHeight: 1.9,
-                            animation: 'gentleFadeIn 2.2s ease forwards',
-                        }}
-                    >
-                        Even when we weren't together,<br />this sky was.
-                    </p>
-                </div>
+            {/* ── SCENE 2 STAR ── */}
+            {(phase === 'waiting-first') && (
+                <>
+                    <Star x={scene2Data.x} y={scene2Data.y} size={scene2Data.size}
+                        interactable={true}
+                        onClick={handleScene2Click} delay={0} />
+                    {/* Text next to star */}
+                    <div className="absolute text-white/40 text-xs tracking-widest pointer-events-none"
+                        style={{ left: `${scene2Data.x + 2}%`, top: `${scene2Data.y}%`, animation: 'gentleFadeIn 3s ease forwards' }}>
+                        {scene2Data.text}
+                    </div>
+                </>
             )}
 
-            {/* ── STARS ── */}
-            <div className="absolute inset-0" style={{ zIndex: 20 }}>
-                {memories.map((mem, i) => {
-                    const isActive = activeIndex === i;
-                    const isInteractable = interactableIdx === i;
-                    // Dim rule: if any memory is active, everything else dims.
-                    // During distance intro, all dim.
-                    const isDimmed =
-                        showDistanceIntro ||
-                        (activeIndex !== null && activeIndex !== i) ||
-                        showEnding;
+            {/* ── SCENE 3 STAR ── */}
+            {(phase === 'scene3-waiting') && (
+                <Star x={scene3Data.x} y={scene3Data.y} size={scene3Data.size}
+                    interactable={true} onClick={handleScene3Click} />
+            )}
 
-                    return (
-                        <Star
-                            key={mem.id}
-                            x={mem.x}
-                            y={mem.y}
-                            size={mem.size}
-                            active={isActive}
-                            dimmed={isDimmed && !isActive}
-                            interactable={isInteractable}
-                            delay={i * 0.25}
-                            onClick={() => {
-                                if (isInteractable) advanceTo(i);
-                            }}
-                        />
-                    );
-                })}
-            </div>
+            {/* ── SCENE 4 STAR ── */}
+            {(phase === 'scene4-waiting') && (
+                <Star x={scene4Data.x} y={scene4Data.y} size={scene4Data.size}
+                    interactable={true} onClick={handleScene4Click} />
+            )}
 
-            {/* ── MEMORY TEXT (painted into sky) ── */}
-            {activeMemory && (
+            {/* ── SCENE 5 STARS ── */}
+            {(phase === 'scene5-waiting') && (
+                <>
+                    <Star x={scene5Data[0].x} y={scene5Data[0].y} size='small'
+                        interactable={!scene5State.a} onClick={() => handleScene5Click('a')} />
+                    <Star x={scene5Data[1].x} y={scene5Data[1].y} size='small'
+                        interactable={!scene5State.b} onClick={() => handleScene5Click('b')} />
+                </>
+            )}
+
+            {/* ── SCENE 6 STAR (Climax) ── */}
+            {(phase === 'scene6-waiting') && (
+                <Star x={scene6Data.x} y={scene6Data.y} size={scene6Data.size}
+                    interactable={true} onClick={handleScene6Click} />
+            )}
+
+            {/* ── MEMORY CARD ── */}
+            {activeCard && (
                 <MemoryCard
-                    memory={activeMemory}
-                    onClose={handleMemoryDismiss}
-                    phase={isClimax ? 'climax' : 'normal'}
+                    memory={activeCard}
+                    phase={phase === 'scene6-revealed' ? 'climax' : 'normal'}
+                    // No onClose needed because orchestrator auto-closes for this journey
+                    onClose={() => { }}
                 />
             )}
 
             {/* ── ENDING ── */}
-            <EndingScreen show={showEnding} onRestart={handleRestart} />
+            <EndingScreen show={phase === 'epilogue'} onRestart={handleRestart} />
 
-            {/* ── shared keyframes ── */}
             <style>{`
-        @keyframes gentleFadeIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0);   }
-        }
-        @keyframes pulse-ring {
-          0%, 100% { opacity: 0.15; transform: translate(-50%,-50%) scale(1);   }
-          50%      { opacity: 0.35; transform: translate(-50%,-50%) scale(1.3);  }
-        }
-      `}</style>
+                @keyframes gentleFadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 };

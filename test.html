@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotional Experience - Under the Same Sky</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Georgia, serif;
+            overflow: hidden;
+            background: #0a0a0f;
+            color: #e8e8f0;
+        }
+
+        /* Customization Form */
+        #customization-form {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        #customization-form.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .form-container {
+            background: rgba(26, 26, 46, 0.8);
+            padding: 50px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(232, 232, 240, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: formFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes formFloat {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .form-container h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #e8e8f0;
+            text-shadow: 0 0 20px rgba(232, 232, 240, 0.3);
+        }
+
+        .form-container p {
+            text-align: center;
+            color: #b8b8c0;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d8d8e0;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(10, 10, 15, 0.5);
+            border: 1px solid rgba(232, 232, 240, 0.2);
+            border-radius: 8px;
+            color: #e8e8f0;
+            font-family: Georgia, serif;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: rgba(232, 232, 240, 0.5);
+            box-shadow: 0 0 20px rgba(232, 232, 240, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .start-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #4a4a6a 0%, #6a6a8a 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-family: Georgia, serif;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .start-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(74, 74, 106, 0.4);
+        }
+
+        /* Experience Container */
+        #experience-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        #experience-container.active {
+            display: block;
+        }
+
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+
+        .scene.active {
+            opacity: 1;
+        }
+
+        .scene-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .gradient-dark {
+            background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 50%, #0a0a0f 100%);
+        }
+
+        .starry-sky {
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0f 100%);
+        }
+
+        /* Gentle Ambient Glow */
+        .gentle-glow {
+            position: absolute;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150%;
+            height: 80%;
+            background: radial-gradient(ellipse at center,
+                    rgba(100, 120, 180, 0.08) 0%,
+                    rgba(80, 100, 150, 0.04) 40%,
+                    transparent 70%);
+            animation: gentleBreath 8s ease-in-out infinite;
+            pointer-events: none;
+            filter: blur(80px);
+        }
+
+        @keyframes gentleBreath {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: translateX(-50%) scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1.1);
+            }
+        }
+
+        /* Moonlight Effect */
+        .moonlight {
+            position: absolute;
+            top: 10%;
+            right: 15%;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle,
+                    rgba(255, 255, 255, 0.3) 0%,
+                    rgba(230, 240, 255, 0.15) 30%,
+                    rgba(200, 220, 255, 0.05) 60%,
+                    transparent 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(2px);
+            animation: moonGlow 6s ease-in-out infinite;
+        }
+
+        .moonlight::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
+                0 0 40px rgba(230, 240, 255, 0.3);
+        }
+
+        @keyframes moonGlow {
+
+            0%,
+            100% {
+                opacity: 0.8;
+                filter: blur(2px);
+            }
+
+            50% {
+                opacity: 1;
+                filter: blur(1px);
+            }
+        }
+
+        /* Cosmic Dust Particles */
+        .cosmic-dust {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        @keyframes dustFloat {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.5;
+            }
+
+            90% {
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translateY(-100vh) translateX(50px);
+                opacity: 0;
+            }
+        }
+
+        /* Stars with Layers */
+        .star-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            transition: transform 0.1s ease-out;
+        }
+
+        .star-layer-0 {
+            z-index: 1;
+        }
+
+        .star-layer-1 {
+            z-index: 2;
+        }
+
+        .star-layer-2 {
+            z-index: 3;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: twinkle 3s infinite;
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+
+        /* Shooting Stars */
+        .shooting-star {
+            position: absolute;
+            border-radius: 50%;
+            background: white;
+            pointer-events: none;
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+        }
+
+        .shooting-star::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            height: 2px;
+            background: linear-gradient(90deg,
+                    rgba(255, 255, 255, 1) 0%,
+                    rgba(255, 255, 255, 0.8) 20%,
+                    rgba(200, 220, 255, 0.4) 60%,
+                    transparent 100%);
+        }
+
+        .shooting-star-small {
+            width: 2px;
+            height: 2px;
+        }
+
+        .shooting-star-small::before {
+            width: 80px;
+        }
+
+        .shooting-star-medium {
+            width: 3px;
+            height: 3px;
+        }
+
+        .shooting-star-medium::before {
+            width: 120px;
+        }
+
+        .shooting-star-large {
+            width: 4px;
+            height: 4px;
+        }
+
+        .shooting-star-large::before {
+            width: 160px;
+            background: linear-gradient(90deg,
+                    rgba(255, 255, 255, 1) 0%,
+                    rgba(255, 255, 255, 0.9) 15%,
+                    rgba(200, 230, 255, 0.6) 50%,
+                    rgba(150, 200, 255, 0.3) 80%,
+                    transparent 100%);
+        }
+
+        @keyframes shootingStar1 {
+            0% {
+                transform: translate(0, 0) rotate(-45deg);
+                opacity: 0;
+            }
+
+            5% {
+                opacity: 1;
+            }
+
+            95% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-400px, 400px) rotate(-45deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes shootingStar2 {
+            0% {
+                transform: translate(0, 0) rotate(-40deg);
+                opacity: 0;
+            }
+
+            5% {
+                opacity: 1;
+            }
+
+            95% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-500px, 450px) rotate(-40deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes shootingStar3 {
+            0% {
+                transform: translate(0, 0) rotate(-50deg);
+                opacity: 0;
+            }
+
+            5% {
+                opacity: 1;
+            }
+
+            95% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-350px, 350px) rotate(-50deg);
+                opacity: 0;
+            }
+        }
+
+        /* Constellation Lines */
+        .constellation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .constellation-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform-origin: left center;
+            opacity: 0;
+            animation: lineAppear 2s ease forwards;
+        }
+
+        @keyframes lineAppear {
+            0% {
+                opacity: 0;
+                transform: scaleX(0);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scaleX(1);
+            }
+        }
+
+        /* Interactive Star Enhanced */
+        .interactive-star {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+            position: relative;
+            z-index: 10;
+        }
+
+        .interactive-star::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200%;
+            height: 200%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            }
+
+            50% {
+                transform: scale(1.3);
+                opacity: 1;
+                box-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        .interactive-star:hover {
+            transform: scale(1.8) !important;
+            opacity: 1 !important;
+            box-shadow: 0 0 60px rgba(255, 255, 255, 1) !important;
+        }
+
+        .interactive-star.clicked {
+            animation: explode 1s ease forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(3);
+                opacity: 0.8;
+                box-shadow: 0 0 80px rgba(255, 255, 255, 1);
+            }
+
+            100% {
+                transform: scale(5);
+                opacity: 0;
+            }
+        }
+
+        /* Star Particles on Click */
+        .star-particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleBurst 1s ease-out forwards;
+        }
+
+        @keyframes particleBurst {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Text Elements Enhanced */
+        .text-element {
+            position: absolute;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            left: 50%;
+            transform: translateX(-50%);
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 255, 255, 0.1);
+        }
+
+        .text-element.visible {
+            opacity: 1;
+        }
+
+        .text-element.fade-in {
+            animation: fadeInEnhanced 3s forwards;
+        }
+
+        @keyframes fadeInEnhanced {
+            0% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(30px);
+                filter: blur(10px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        /* Breathing Light Effect */
+        .text-element.breathing {
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                text-shadow:
+                    0 0 10px rgba(0, 0, 0, 0.8),
+                    0 0 20px rgba(255, 255, 255, 0.3),
+                    0 0 30px rgba(255, 255, 255, 0.2),
+                    0 0 40px rgba(200, 220, 255, 0.15);
+                transform: translateX(-50%) scale(1);
+            }
+
+            50% {
+                text-shadow:
+                    0 0 10px rgba(0, 0, 0, 0.8),
+                    0 0 30px rgba(255, 255, 255, 0.6),
+                    0 0 50px rgba(255, 255, 255, 0.4),
+                    0 0 70px rgba(200, 220, 255, 0.3),
+                    0 0 90px rgba(150, 180, 255, 0.2);
+                transform: translateX(-50%) scale(1.02);
+            }
+        }
+
+        /* Instruction Text */
+        .instruction {
+            font-size: 16px;
+            color: #a8a8b0;
+            font-style: italic;
+            animation: instructionPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes instructionPulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Progress Indicator */
+        .progress-dots {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(232, 232, 240, 0.3);
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        .progress-dot::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transition: all 0.5s ease;
+        }
+
+        .progress-dot.active {
+            background: rgba(232, 232, 240, 0.9);
+            transform: scale(1.5);
+            box-shadow: 0 0 10px rgba(232, 232, 240, 0.6);
+        }
+
+        .progress-dot.active::before {
+            width: 200%;
+            height: 200%;
+            opacity: 0;
+        }
+
+        /* Completion Screen */
+        #completion-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 100%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 2000;
+        }
+
+        #completion-screen.active {
+            display: flex;
+        }
+
+        .completion-message {
+            font-size: 28px;
+            margin-bottom: 30px;
+            opacity: 0;
+            animation: fadeInEnhanced 2s forwards;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .restart-button {
+            padding: 12px 30px;
+            background: rgba(232, 232, 240, 0.1);
+            border: 1px solid rgba(232, 232, 240, 0.3);
+            border-radius: 8px;
+            color: #e8e8f0;
+            font-family: Georgia, serif;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeInEnhanced 2s 1s forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .restart-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .restart-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .restart-button:hover {
+            background: rgba(232, 232, 240, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(232, 232, 240, 0.3);
+        }
+
+        /* Ripple Effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+            animation: rippleEffect 1.5s ease-out forwards;
+        }
+
+        @keyframes rippleEffect {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+
+            100% {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 30px;
+            }
+
+            .form-container h1 {
+                font-size: 24px;
+            }
+
+            .text-element {
+                font-size: 20px !important;
+                padding: 0 20px;
+            }
+
+            .completion-message {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Customization Form -->
+    <div id="customization-form">
+        <div class="form-container">
+            <h1>Under the Same Sky</h1>
+            <p>Create a personalized emotional experience</p>
+
+            <form id="form">
+                <div class="form-group">
+                    <label for="your_name">Your Name</label>
+                    <input type="text" id="your_name" name="your_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="their_name">Their Name</label>
+                    <input type="text" id="their_name" name="their_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="special_date">Special Date (optional)</label>
+                    <input type="text" id="special_date" name="special_date" placeholder="e.g., March 15, 2023">
+                </div>
+
+                <div class="form-group">
+                    <label for="memory">A Memory You Share (optional)</label>
+                    <textarea id="memory" name="memory"
+                        placeholder="e.g., That night on the Brooklyn Bridge when we realized we were falling in love"></textarea>
+                </div>
+
+                <button type="submit" class="start-button">Begin Experience</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Experience Container -->
+    <div id="experience-container"></div>
+
+    <!-- Completion Screen -->
+    <div id="completion-screen">
+        <div class="completion-message">Distance means nothing when love is everything.</div>
+        <button class="restart-button" onclick="location.reload()">Create Another</button>
+    </div>
+
+    <!-- Progress Dots -->
+    <div class="progress-dots" id="progress-dots"></div>
+
+    <script>
+        // Template Definition
+        const template = {
+            "id": "under_the_same_sky",
+            "title": "Under the Same Sky",
+            "scenes": [
+                {
+                    "id": "prologue",
+                    "type": "text_reveal",
+                    "duration": 15,
+                    "background": "gradient-dark",
+                    "effects": ["cosmic_dust", "gentle_glow"],
+                    "elements": [
+                        {
+                            "id": "line1",
+                            "type": "text",
+                            "content": "Distance is just a test",
+                            "position": { "y": "42%" },
+                            "typography": { "size": 28, "color": "#e8e8f0" },
+                            "animation": { "type": "fade_in", "duration": 3, "delay": 2 },
+                            "breathing": true
+                        },
+                        {
+                            "id": "line2",
+                            "type": "text",
+                            "content": "to see how far love can travel.",
+                            "position": { "y": "52%" },
+                            "typography": { "size": 24, "color": "#c8c8d0" },
+                            "animation": { "type": "fade_in", "duration": 3, "delay": 8 },
+                            "breathing": true
+                        }
+                    ],
+                    "advance": { "type": "auto", "delay": 15 }
+                },
+                {
+                    "id": "first_star",
+                    "type": "interactive",
+                    "duration": 20,
+                    "background": "starry-sky",
+                    "star_count": 80,
+                    "star_layers": 3,
+                    "effects": ["shooting_stars", "cosmic_dust"],
+                    "elements": [
+                        {
+                            "id": "instruction1",
+                            "type": "text",
+                            "content": "(Find the brightest star)",
+                            "position": { "y": "20%" },
+                            "typography": { "size": 16, "color": "#a8a8b0", "style": "italic" },
+                            "animation": { "type": "fade_in", "duration": 2, "delay": 1 }
+                        },
+                        {
+                            "id": "star1",
+                            "type": "interactive_star",
+                            "position": { "x": "50%", "y": "50%" },
+                            "size": 8,
+                            "on_click": {
+                                "action": "reveal_text",
+                                "targets": ["reveal1", "reveal2"],
+                                "effects": ["particles", "ripple"]
+                            }
+                        },
+                        {
+                            "id": "reveal1",
+                            "type": "text",
+                            "content": "We stood together once,",
+                            "position": { "y": "65%" },
+                            "typography": { "size": 26, "color": "#e8e8f0" },
+                            "reveal_delay": 0,
+                            "breathing": true
+                        },
+                        {
+                            "id": "reveal2",
+                            "type": "text",
+                            "content": "and the whole world fell away.",
+                            "position": { "y": "72%" },
+                            "typography": { "size": 22, "color": "#c8c8d0" },
+                            "reveal_delay": 3,
+                            "breathing": true
+                        }
+                    ],
+                    "advance": { "type": "auto", "delay": 6, "after_interaction": true }
+                },
+                {
+                    "id": "personalized_moment",
+                    "type": "text_reveal",
+                    "duration": 20,
+                    "background": "starry-sky",
+                    "star_count": 150,
+                    "star_layers": 3,
+                    "effects": ["cosmic_dust", "constellation", "moonlight"],
+                    "elements": [
+                        {
+                            "id": "names",
+                            "type": "text",
+                            "content": "{{your_name}} and {{their_name}}",
+                            "position": { "y": "38%" },
+                            "typography": { "size": 34, "color": "#e8e8f0" },
+                            "animation": { "type": "fade_in", "duration": 3, "delay": 1 },
+                            "breathing": true
+                        },
+                        {
+                            "id": "date",
+                            "type": "text",
+                            "content": "{{special_date}}",
+                            "position": { "y": "48%" },
+                            "typography": { "size": 22, "color": "#c8c8d0" },
+                            "animation": { "type": "fade_in", "duration": 3, "delay": 5 },
+                            "conditional": { "field": "special_date", "operator": "exists" },
+                            "breathing": true
+                        },
+                        {
+                            "id": "memory_text",
+                            "type": "text",
+                            "content": "{{memory}}",
+                            "position": { "y": "58%" },
+                            "typography": { "size": 20, "color": "#b8b8c0" },
+                            "animation": { "type": "fade_in", "duration": 3, "delay": 9 },
+                            "conditional": { "field": "memory", "operator": "exists" },
+                            "breathing": true
+                        },
+                        {
+                            "id": "moment_text",
+                            "type": "text",
+                            "content": "Some moments change everything.",
+                            "position": { "y": "70%" },
+                            "typography": { "size": 24, "color": "#d8d8e0" },
+                            "animation": { "type": "fade_in", "duration": 3, "delay": 13 },
+                            "breathing": true
+                        }
+                    ],
+                    "advance": { "type": "auto", "delay": 20 }
+                },
+                {
+                    "id": "distance",
+                    "type": "interactive",
+                    "duration": 25,
+                    "background": "starry-sky",
+                    "star_count": 120,
+                    "star_layers": 3,
+                    "effects": ["shooting_stars", "cosmic_dust"],
+                    "elements": [
+                        {
+                            "id": "instruction2",
+                            "type": "text",
+                            "content": "(Touch both stars to connect them)",
+                            "position": { "y": "15%" },
+                            "typography": { "size": 16, "color": "#a8a8b0", "style": "italic" },
+                            "animation": { "type": "fade_in", "duration": 2, "delay": 1 }
+                        },
+                        {
+                            "id": "star_left",
+                            "type": "interactive_star",
+                            "position": { "x": "30%", "y": "50%" },
+                            "size": 6,
+                            "on_click": {
+                                "action": "reveal_text",
+                                "targets": ["reveal_left"],
+                                "effects": ["particles", "ripple", "constellation_to_right"]
+                            }
+                        },
+                        {
+                            "id": "star_right",
+                            "type": "interactive_star",
+                            "position": { "x": "70%", "y": "50%" },
+                            "size": 6,
+                            "on_click": {
+                                "action": "reveal_text",
+                                "targets": ["reveal_right"],
+                                "effects": ["particles", "ripple"]
+                            }
+                        },
+                        {
+                            "id": "reveal_left",
+                            "type": "text",
+                            "content": "You're looking up from somewhere far away.",
+                            "position": { "y": "65%" },
+                            "typography": { "size": 22, "color": "#e8e8f0" },
+                            "reveal_delay": 0,
+                            "breathing": true
+                        },
+                        {
+                            "id": "reveal_right",
+                            "type": "text",
+                            "content": "I'm looking up from right here.",
+                            "position": { "y": "72%" },
+                            "typography": { "size": 22, "color": "#e8e8f0" },
+                            "reveal_delay": 0,
+                            "breathing": true
+                        },
+                        {
+                            "id": "reveal_both",
+                            "type": "text",
+                            "content": "But we're both looking at the same sky.",
+                            "position": { "y": "82%" },
+                            "typography": { "size": 26, "color": "#f8f8ff" },
+                            "reveal_delay": 0,
+                            "requires_both": ["star_left", "star_right"],
+                            "breathing": true
+                        }
+                    ],
+                    "advance": { "type": "both_clicked", "delay": 8, "targets": ["star_left", "star_right"] }
+                },
+                {
+                    "id": "epilogue",
+                    "type": "text_reveal",
+                    "duration": 14,
+                    "background": "gradient-dark",
+                    "effects": ["cosmic_dust", "gentle_glow"],
+                    "elements": [
+                        {
+                            "id": "final1",
+                            "type": "text",
+                            "content": "No matter where you are,",
+                            "position": { "y": "42%" },
+                            "typography": { "size": 28, "color": "#e8e8f0" },
+                            "animation": { "type": "fade_in", "duration": 3, "delay": 1 },
+                            "breathing": true
+                        },
+                        {
+                            "id": "final2",
+                            "type": "text",
+                            "content": "we're always under the same sky.",
+                            "position": { "y": "52%" },
+                            "typography": { "size": 24, "color": "#c8c8d0" },
+                            "animation": { "type": "fade_in", "duration": 3, "delay": 6 },
+                            "breathing": true
+                        }
+                    ],
+                    "advance": { "type": "auto", "delay": 14 }
+                }
+            ]
+        };
+
+        // Experience Engine
+        class ExperienceEngine {
+            constructor(template, data) {
+                this.template = template;
+                this.data = data;
+                this.currentSceneIndex = 0;
+                this.container = document.getElementById('experience-container');
+                this.clickedElements = new Set();
+                this.advanceTimer = null;
+                this.effectTimers = [];
+            }
+
+            start() {
+                document.getElementById('customization-form').classList.add('hidden');
+                setTimeout(() => {
+                    this.container.classList.add('active');
+                    this.initProgressDots();
+                    this.renderScene(0);
+                }, 500);
+            }
+
+            initProgressDots() {
+                const dotsContainer = document.getElementById('progress-dots');
+                dotsContainer.innerHTML = '';
+                this.template.scenes.forEach((_, index) => {
+                    const dot = document.createElement('div');
+                    dot.className = 'progress-dot';
+                    if (index === 0) dot.classList.add('active');
+                    dotsContainer.appendChild(dot);
+                });
+            }
+
+            updateProgressDots(sceneIndex) {
+                const dots = document.querySelectorAll('.progress-dot');
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === sceneIndex);
+                });
+            }
+
+            renderScene(sceneIndex) {
+                if (sceneIndex >= this.template.scenes.length) {
+                    this.complete();
+                    return;
+                }
+
+                this.currentSceneIndex = sceneIndex;
+                this.updateProgressDots(sceneIndex);
+
+                const sceneData = this.template.scenes[sceneIndex];
+                const sceneElement = this.createSceneElement(sceneData);
+
+                this.container.appendChild(sceneElement);
+
+                // Add parallax effect if scene has star layers
+                if (sceneData.star_layers && sceneData.star_layers > 1) {
+                    this.addParallaxEffect(sceneElement);
+                }
+
+                // Fade in scene
+                setTimeout(() => {
+                    sceneElement.classList.add('active');
+                }, 50);
+
+                // Add effects
+                if (sceneData.effects) {
+                    sceneData.effects.forEach(effect => {
+                        this.addEffect(sceneElement, effect, sceneData);
+                    });
+                }
+
+                // Handle scene advance
+                this.handleSceneAdvance(sceneData, sceneElement);
+            }
+
+            addParallaxEffect(scene) {
+                const parallaxHandler = (e) => {
+                    const layers = scene.querySelectorAll('.star-layer');
+                    const centerX = window.innerWidth / 2;
+                    const centerY = window.innerHeight / 2;
+                    const deltaX = (e.clientX - centerX) / centerX;
+                    const deltaY = (e.clientY - centerY) / centerY;
+
+                    layers.forEach((layer, index) => {
+                        const depth = (index + 1) * 10; // More movement for closer layers
+                        const moveX = deltaX * depth;
+                        const moveY = deltaY * depth;
+                        layer.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                    });
+                };
+
+                document.addEventListener('mousemove', parallaxHandler);
+
+                // Clean up when scene changes
+                const cleanup = () => {
+                    document.removeEventListener('mousemove', parallaxHandler);
+                };
+
+                scene.addEventListener('remove', cleanup);
+                setTimeout(() => {
+                    if (!scene.classList.contains('active')) cleanup();
+                }, 30000); // Safety cleanup
+            }
+
+            createSceneElement(sceneData) {
+                const scene = document.createElement('div');
+                scene.className = 'scene';
+                scene.id = sceneData.id;
+
+                // Background
+                const background = document.createElement('div');
+                background.className = `scene-background ${sceneData.background}`;
+                scene.appendChild(background);
+
+                // Stars with layers
+                if (sceneData.star_count) {
+                    const layers = sceneData.star_layers || 1;
+                    for (let i = 0; i < layers; i++) {
+                        const layer = document.createElement('div');
+                        layer.className = 'star-layer';
+                        layer.style.zIndex = i;
+                        this.createStars(layer, Math.floor(sceneData.star_count / layers), i);
+                        background.appendChild(layer);
+                    }
+                }
+
+                // Elements
+                sceneData.elements.forEach(element => {
+                    if (this.shouldRenderElement(element)) {
+                        const el = this.createElementNode(element, sceneData);
+                        scene.appendChild(el);
+                    }
+                });
+
+                return scene;
+            }
+
+            createStars(container, count, layer) {
+                container.classList.add(`star-layer-${layer}`);
+
+                for (let i = 0; i < count; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    star.style.left = Math.random() * 100 + '%';
+                    star.style.top = Math.random() * 100 + '%';
+
+                    // Larger stars for closer layers
+                    const baseSize = Math.random() * 1.5 + 1;
+                    const layerMultiplier = 1 + (layer * 0.4);
+                    const size = baseSize * layerMultiplier;
+
+                    star.style.width = size + 'px';
+                    star.style.height = size + 'px';
+                    star.style.animationDelay = Math.random() * 3 + 's';
+                    star.style.animationDuration = (2 + Math.random() * 2) + 's';
+
+                    // Brighter stars for closer layers
+                    const opacity = 0.5 + (layer * 0.2);
+                    star.style.opacity = opacity;
+
+                    container.appendChild(star);
+                }
+            }
+
+            addEffect(scene, effectType, sceneData) {
+                switch (effectType) {
+                    case 'gentle_glow':
+                        this.createGentleGlow(scene);
+                        break;
+                    case 'moonlight':
+                        this.createMoonlight(scene);
+                        break;
+                    case 'cosmic_dust':
+                        this.createCosmicDust(scene);
+                        break;
+                    case 'shooting_stars':
+                        this.createShootingStars(scene);
+                        break;
+                    case 'constellation':
+                        this.createConstellation(scene);
+                        break;
+                }
+            }
+
+            createGentleGlow(scene) {
+                const glow = document.createElement('div');
+                glow.className = 'gentle-glow';
+                scene.appendChild(glow);
+            }
+
+            createMoonlight(scene) {
+                const moon = document.createElement('div');
+                moon.className = 'moonlight';
+                scene.appendChild(moon);
+            }
+
+            createCosmicDust(scene) {
+                const dustInterval = setInterval(() => {
+                    if (!scene.classList.contains('active')) {
+                        clearInterval(dustInterval);
+                        return;
+                    }
+
+                    const dust = document.createElement('div');
+                    dust.className = 'cosmic-dust';
+                    dust.style.left = Math.random() * 100 + '%';
+                    dust.style.top = '100%';
+                    dust.style.animation = `dustFloat ${10 + Math.random() * 10}s linear forwards`;
+                    dust.style.animationDelay = Math.random() * 2 + 's';
+                    scene.appendChild(dust);
+
+                    setTimeout(() => dust.remove(), 22000);
+                }, 500);
+
+                this.effectTimers.push(dustInterval);
+            }
+
+            createShootingStars(scene) {
+                const createStar = () => {
+                    if (!scene.classList.contains('active')) return;
+
+                    const sizes = ['small', 'medium', 'large'];
+                    const size = sizes[Math.floor(Math.random() * sizes.length)];
+                    const animations = ['shootingStar1', 'shootingStar2', 'shootingStar3'];
+                    const animation = animations[Math.floor(Math.random() * animations.length)];
+
+                    const star = document.createElement('div');
+                    star.className = `shooting-star shooting-star-${size}`;
+                    star.style.left = (60 + Math.random() * 40) + '%';
+                    star.style.top = (Math.random() * 40) + '%';
+
+                    const duration = size === 'large' ? 1.5 : size === 'medium' ? 2 : 2.5;
+                    star.style.animation = `${animation} ${duration}s ease-out forwards`;
+
+                    scene.appendChild(star);
+                    setTimeout(() => star.remove(), duration * 1000);
+                };
+
+                // Create initial burst
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(createStar, i * 800);
+                }
+
+                // Then create periodically
+                const shootInterval = setInterval(() => {
+                    if (!scene.classList.contains('active')) {
+                        clearInterval(shootInterval);
+                        return;
+                    }
+                    createStar();
+                }, 2000 + Math.random() * 2000); // Every 2-4 seconds
+
+                this.effectTimers.push(shootInterval);
+            }
+
+            createConstellation(scene) {
+                const constellation = document.createElement('div');
+                constellation.className = 'constellation';
+
+                // Create constellation pattern
+                const points = [
+                    { x: 45, y: 35 },
+                    { x: 55, y: 35 },
+                    { x: 50, y: 45 },
+                    { x: 45, y: 55 },
+                    { x: 55, y: 55 }
+                ];
+
+                points.forEach((point, i) => {
+                    if (i < points.length - 1) {
+                        const nextPoint = points[i + 1];
+                        const line = this.createConstellationLine(point, nextPoint, i);
+                        constellation.appendChild(line);
+                    }
+                });
+
+                scene.appendChild(constellation);
+            }
+
+            createConstellationLine(from, to, index) {
+                const line = document.createElement('div');
+                line.className = 'constellation-line';
+
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+                line.style.left = from.x + '%';
+                line.style.top = from.y + '%';
+                line.style.width = length + '%';
+                line.style.transform = `rotate(${angle}deg)`;
+                line.style.animationDelay = (index * 0.5) + 's';
+
+                return line;
+            }
+
+            shouldRenderElement(element) {
+                if (!element.conditional) return true;
+                const { field, operator } = element.conditional;
+                if (operator === 'exists') {
+                    return this.data[field] !== undefined && this.data[field] !== '';
+                }
+                return true;
+            }
+
+            createElementNode(element, sceneData) {
+                const el = document.createElement('div');
+
+                if (element.type === 'text') {
+                    el.className = 'text-element';
+                    el.id = element.id;
+                    el.textContent = this.personalize(element.content);
+                    el.style.top = element.position.y;
+                    el.style.fontSize = element.typography.size + 'px';
+                    el.style.color = element.typography.color;
+                    if (element.typography.style) {
+                        el.style.fontStyle = element.typography.style;
+                    }
+                    if (element.breathing) {
+                        el.classList.add('breathing');
+                    }
+
+                    // Animation
+                    if (element.animation) {
+                        setTimeout(() => {
+                            el.classList.add('visible');
+                            el.classList.add('fade-in');
+                        }, element.animation.delay * 1000);
+                    }
+                } else if (element.type === 'interactive_star') {
+                    el.className = 'star interactive-star';
+                    el.id = element.id;
+                    el.style.left = element.position.x;
+                    el.style.top = element.position.y;
+                    el.style.width = element.size + 'px';
+                    el.style.height = element.size + 'px';
+                    el.style.transform = 'translate(-50%, -50%)';
+
+                    el.addEventListener('click', (e) => {
+                        this.handleStarClick(element, sceneData, e);
+                    });
+                }
+
+                return el;
+            }
+
+            personalize(content) {
+                return content.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+                    return this.data[key] || '';
+                });
+            }
+
+            handleStarClick(element, sceneData, event) {
+                if (this.clickedElements.has(element.id)) return;
+
+                this.clickedElements.add(element.id);
+
+                // Visual feedback
+                const starEl = document.getElementById(element.id);
+                starEl.classList.add('clicked');
+
+                // Effects
+                if (element.on_click && element.on_click.effects) {
+                    element.on_click.effects.forEach(effect => {
+                        if (effect === 'particles') {
+                            this.createStarParticles(event.clientX, event.clientY);
+                        } else if (effect === 'ripple') {
+                            this.createRipple(event.clientX, event.clientY);
+                        } else if (effect === 'constellation_to_right') {
+                            this.drawConstellationLine(element, sceneData);
+                        }
+                    });
+                }
+
+                // Reveal targets
+                if (element.on_click && element.on_click.targets) {
+                    element.on_click.targets.forEach(targetId => {
+                        const targetElement = sceneData.elements.find(el => el.id === targetId);
+                        if (targetElement) {
+                            setTimeout(() => {
+                                const targetEl = document.getElementById(targetId);
+                                if (targetEl) {
+                                    targetEl.classList.add('visible');
+                                }
+                            }, (targetElement.reveal_delay || 0) * 1000);
+                        }
+                    });
+                }
+
+                // Check if both stars clicked
+                this.checkBothClicked(sceneData);
+            }
+
+            createStarParticles(x, y) {
+                for (let i = 0; i < 12; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'star-particle';
+                    particle.style.left = x + 'px';
+                    particle.style.top = y + 'px';
+
+                    const angle = (i / 12) * Math.PI * 2;
+                    const distance = 50 + Math.random() * 50;
+                    const tx = Math.cos(angle) * distance;
+                    const ty = Math.sin(angle) * distance;
+
+                    particle.style.setProperty('--tx', tx + 'px');
+                    particle.style.setProperty('--ty', ty + 'px');
+
+                    document.body.appendChild(particle);
+                    setTimeout(() => particle.remove(), 1000);
+                }
+            }
+
+            createRipple(x, y) {
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple';
+                ripple.style.left = (x - 100) + 'px';
+                ripple.style.top = (y - 100) + 'px';
+                document.body.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 1500);
+            }
+
+            drawConstellationLine(element, sceneData) {
+                // Draw line to the other star if it exists
+                const otherStar = sceneData.elements.find(el =>
+                    el.type === 'interactive_star' && el.id !== element.id
+                );
+
+                if (otherStar) {
+                    const scene = document.getElementById(sceneData.id);
+                    const fromX = parseFloat(element.position.x);
+                    const fromY = parseFloat(element.position.y);
+                    const toX = parseFloat(otherStar.position.x);
+                    const toY = parseFloat(otherStar.position.y);
+
+                    const line = document.createElement('div');
+                    line.className = 'constellation-line';
+
+                    const dx = toX - fromX;
+                    const dy = toY - fromY;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx);
+
+                    line.style.left = fromX + '%';
+                    line.style.top = fromY + '%';
+                    line.style.width = length + '%';
+                    line.style.transform = `rotate(${angle}rad)`;
+
+                    scene.appendChild(line);
+                }
+            }
+
+            checkBothClicked(sceneData) {
+                const bothElement = sceneData.elements.find(el => el.requires_both);
+                if (bothElement) {
+                    const allClicked = bothElement.requires_both.every(id =>
+                        this.clickedElements.has(id)
+                    );
+                    if (allClicked) {
+                        setTimeout(() => {
+                            const el = document.getElementById(bothElement.id);
+                            if (el) el.classList.add('visible');
+                        }, bothElement.reveal_delay * 1000);
+                    }
+                }
+            }
+
+            handleSceneAdvance(sceneData, sceneElement) {
+                const advance = sceneData.advance;
+
+                if (advance.type === 'auto') {
+                    this.advanceTimer = setTimeout(() => {
+                        this.advanceToNextScene(sceneElement);
+                    }, advance.delay * 1000);
+                } else if (advance.type === 'both_clicked') {
+                    const checkInterval = setInterval(() => {
+                        const allClicked = advance.targets.every(id =>
+                            this.clickedElements.has(id)
+                        );
+                        if (allClicked) {
+                            clearInterval(checkInterval);
+                            setTimeout(() => {
+                                this.advanceToNextScene(sceneElement);
+                            }, advance.delay * 1000);
+                        }
+                    }, 100);
+                }
+            }
+
+            advanceToNextScene(currentSceneElement) {
+                // Clear effect timers
+                this.effectTimers.forEach(timer => clearInterval(timer));
+                this.effectTimers = [];
+
+                // Fade out current scene
+                currentSceneElement.classList.remove('active');
+
+                setTimeout(() => {
+                    currentSceneElement.remove();
+                    this.clickedElements.clear();
+                    this.renderScene(this.currentSceneIndex + 1);
+                }, 1500);
+            }
+
+            complete() {
+                this.container.classList.remove('active');
+                document.getElementById('progress-dots').style.display = 'none';
+
+                // Clear any remaining timers
+                this.effectTimers.forEach(timer => clearInterval(timer));
+
+                setTimeout(() => {
+                    document.getElementById('completion-screen').classList.add('active');
+                }, 500);
+            }
+        }
+
+        // Form Handling
+        document.getElementById('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const formData = {
+                your_name: document.getElementById('your_name').value,
+                their_name: document.getElementById('their_name').value,
+                special_date: document.getElementById('special_date').value,
+                memory: document.getElementById('memory').value
+            };
+
+            const engine = new ExperienceEngine(template, formData);
+            engine.start();
+        });
+    </script>
+</body>
+
+</html>
