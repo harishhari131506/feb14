@@ -8,6 +8,7 @@ import LandingPage from './pages/LandingPage';
 import TemplatesPage from './pages/TemplatesPage';
 import MemoryConstellation from './components/templates/MemoryConstellation';
 import EternalRomance from './components/templates/EternalRomance/EternalRomance';
+import ScrollStory from './components/templates/ScrollStory/ScrollStory';
 import TestPage from './pages/TestPage';
 import ScrollToTop from './components/utils/ScrollToTop';
 import CustomCursor from './components/animations/CustomCursor';
@@ -54,6 +55,7 @@ function App() {
             <Route path="/templates" element={<><Navbar /><TemplatesPage /></>} />
             <Route path="/templates/memory-constellation" element={<MemoryConstellation />} />
             <Route path="/templates/eternal-romance" element={<EternalRomance />} />
+            <Route path="/templates/scroll-story" element={<ScrollStory />} />
             <Route path="/test" element={<TestPage />} />
           </Routes>
         </PageTransition>

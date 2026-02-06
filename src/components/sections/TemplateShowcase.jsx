@@ -71,6 +71,16 @@ const templates = [
         imageSrc: withBase("preview.jpg"),
         badge: "Storyline",
         tagline: "Timeline-style story that walks them through every chapter.",
+    },
+    {
+        id: 7,
+        title: "The Journey",
+        category: "Just Because",
+        users: 156,
+        color: "bg-[#E5E7EB]",
+        imageSrc: withBase("templates/journey.jpg"), // Using a placeholder or existing image if available
+        badge: "Interactive Story",
+        tagline: "A scrolling narrative about connection, distance, and the moments in between.",
     }
 ];
 

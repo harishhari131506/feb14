@@ -57,6 +57,15 @@ const templates = [
         image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?q=80&w=2003&auto=format&fit=crop",
         tags: ["Retro", "Photos", "Nostalgic"],
         color: "bg-stone-500"
+    },
+    {
+        id: 7,
+        title: "The Journey",
+        description: "A scrolling narrative about connection, distance, and the moments in between.",
+        image: "https://images.unsplash.com/photo-1499540633125-484965b60031?q=80&w=2071&auto=format&fit=crop",
+        tags: ["Interactive", "Story", "Scroll"],
+        color: "bg-gray-800",
+        link: "/templates/scroll-story"
     }
 ];
 
