@@ -191,14 +191,14 @@ function ThreeJSScene() {
             <fogExp2 attach="fog" args={['#0b1015', 0.06]} />
 
             {/* Minimal ambient only */}
-            <ambientLight intensity={0.05} />
+            <ambientLight intensity={0.5} />
 
             {/* Spotlight from above for focused illumination */}
             <spotLight
                 position={[0, 12, 0]}
                 angle={0.65}
                 penumbra={1}
-                intensity={0.5}
+                intensity={0.7}
                 color="#dce7ee"
             />
 
@@ -229,9 +229,6 @@ function ThreeJSScene() {
                     intensity={1.2}
                     mipmapBlur={true}
                 />
-
-                {/* Noise/Grain - film texture */}
-                <Noise opacity={0.15} />
 
                 {/* Vignette - darkened corners */}
                 <Vignette darkness={0.6} offset={0.3} />
