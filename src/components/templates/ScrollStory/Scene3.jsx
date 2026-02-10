@@ -55,12 +55,12 @@ const Scene3 = ({ scrollProgress }) => {
 
     return (
         <div className="absolute inset-0 overflow-hidden">
-            {/* Background - Warming gold atmosphere */}
-            <div
+            {/* Background - Warming gold atmosphere - REMOVED for global bg */}
+            {/* <div
                 ref={bgRef}
                 className="absolute inset-0 bg-gradient-to-br from-[#4a5a54] via-[#5a5a44] to-[#6a5a34] transition-all duration-300"
                 style={{ willChange: 'filter' }}
-            />
+            /> */}
 
             {/* Ambient glow */}
             <div className="absolute inset-0 bg-gradient-radial from-amber-400/20 via-transparent to-transparent" />
