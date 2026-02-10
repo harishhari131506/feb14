@@ -52,6 +52,29 @@ export const ScrollStory = () => {
     return -scrollProgress * 200
   }
 
+  // Calculate opacity for each scene with MUCH tighter transitions
+  const getSceneOpacity = (sceneIndex) => {
+    const sceneCenter = (sceneIndex + 0.5) * 0.333 // Center of each scene
+    const fadeLength = 0.08 // Only 8% fade zone (much tighter!)
+
+    // Distance from scene center
+    const distanceFromCenter = Math.abs(scrollProgress - sceneCenter)
+
+    // If within the scene's main area, full opacity
+    if (distanceFromCenter < 0.166 - fadeLength) {
+      return 1
+    }
+
+    // If in fade zone
+    if (distanceFromCenter < 0.166) {
+      const fadeProgress = (0.166 - distanceFromCenter) / fadeLength
+      return Math.max(0, Math.min(1, fadeProgress))
+    }
+
+    // Outside the scene
+    return 0
+  }
+
   return (
     <div
       ref={scrollContainerRef}
@@ -77,32 +100,50 @@ export const ScrollStory = () => {
           }}
         >
           {/* Scene 1 */}
-          <div className="relative w-screen h-screen flex-shrink-0">
+          <div
+            className="relative w-screen h-screen flex-shrink-0"
+            style={{
+              opacity: Math.max(getSceneOpacity(0), scrollProgress < 0.25 ? 1 : 0),
+              transition: 'opacity 0.2s ease-in-out'
+            }}
+          >
             <Scene1 scrollProgress={scene1Progress} />
 
             <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-mono z-50 backdrop-blur-sm">
               <div>Scene 1: {(scene1Progress * 100).toFixed(1)}%</div>
-              <div className="text-xs opacity-60 mt-1">Position: {(scrollProgress * 100).toFixed(0)}%</div>
+              <div className="text-xs opacity-60 mt-1">Opacity: {(Math.max(getSceneOpacity(0), scrollProgress < 0.25 ? 1 : 0) * 100).toFixed(0)}%</div>
             </div>
           </div>
 
           {/* Scene 2 */}
-          <div className="relative w-screen h-screen flex-shrink-0">
+          <div
+            className="relative w-screen h-screen flex-shrink-0"
+            style={{
+              opacity: getSceneOpacity(1),
+              transition: 'opacity 0.2s ease-in-out'
+            }}
+          >
             <Scene2 scrollProgress={scene2Progress} />
 
             <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-mono z-50 backdrop-blur-sm">
               <div>Scene 2: {(scene2Progress * 100).toFixed(1)}%</div>
-              <div className="text-xs opacity-60 mt-1">Position: {(scrollProgress * 100).toFixed(0)}%</div>
+              <div className="text-xs opacity-60 mt-1">Opacity: {(getSceneOpacity(1) * 100).toFixed(0)}%</div>
             </div>
           </div>
 
           {/* Scene 3 */}
-          <div className="relative w-screen h-screen flex-shrink-0">
+          <div
+            className="relative w-screen h-screen flex-shrink-0"
+            style={{
+              opacity: Math.max(getSceneOpacity(2), scrollProgress > 0.75 ? 1 : 0),
+              transition: 'opacity 0.2s ease-in-out'
+            }}
+          >
             <Scene3 scrollProgress={scene3Progress} />
 
             <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-mono z-50 backdrop-blur-sm">
               <div>Scene 3: {(scene3Progress * 100).toFixed(1)}%</div>
-              <div className="text-xs opacity-60 mt-1">Position: {(scrollProgress * 100).toFixed(0)}%</div>
+              <div className="text-xs opacity-60 mt-1">Opacity: {(Math.max(getSceneOpacity(2), scrollProgress > 0.75 ? 1 : 0) * 100).toFixed(0)}%</div>
             </div>
           </div>
         </div>
@@ -127,6 +168,137 @@ export const ScrollStory = () => {
 }
 
 export default ScrollStory
+// import { useEffect, useState, useCallback, useRef } from 'react'
+// import Scene1 from './Scene1'
+// import Scene2 from './Scene2'
+// import Scene3 from './Scene3'
+
+// export const ScrollStory = () => {
+//   const [scene1Progress, setScene1Progress] = useState(0)
+//   const [scene2Progress, setScene2Progress] = useState(0)
+//   const [scene3Progress, setScene3Progress] = useState(0)
+//   const [scrollProgress, setScrollProgress] = useState(0)
+
+//   const scrollContainerRef = useRef(null)
+
+//   const handleScroll = useCallback(() => {
+//     if (!scrollContainerRef.current) return
+
+//     const scrollY = scrollContainerRef.current.scrollTop
+//     const containerHeight = scrollContainerRef.current.clientHeight
+
+//     // Total scroll distance - 2x container height for smooth progression
+//     const totalScrollHeight = containerHeight * 2
+//     const progress = Math.min(scrollY / totalScrollHeight, 1)
+//     setScrollProgress(progress)
+
+//     // Calculate which scene and its progress
+//     if (progress < 0.333) {
+//       // Scene 1 (0-33%)
+//       const localProgress = progress / 0.333
+//       setScene1Progress(localProgress * 0.08)
+//     } else if (progress < 0.666) {
+//       // Scene 2 (33-66%)
+//       const localProgress = (progress - 0.333) / 0.333
+//       setScene2Progress(0.08 + localProgress * 0.10)
+//     } else {
+//       // Scene 3 (66-100%)
+//       const localProgress = (progress - 0.666) / 0.334
+//       setScene3Progress(0.18 + localProgress * 0.12)
+//     }
+//   }, [])
+
+//   useEffect(() => {
+//     const container = scrollContainerRef.current
+//     if (!container) return
+
+//     handleScroll()
+//     container.addEventListener('scroll', handleScroll, { passive: true })
+//     return () => container.removeEventListener('scroll', handleScroll)
+//   }, [handleScroll])
+
+//   // Calculate horizontal position
+//   const getHorizontalPosition = () => {
+//     return -scrollProgress * 200
+//   }
+
+//   return (
+//     <div
+//       ref={scrollContainerRef}
+//       className="w-full h-screen overflow-y-scroll overflow-x-hidden bg-black"
+//       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+//     >
+//       {/* Hide scrollbar */}
+//       <style jsx>{`
+//         div::-webkit-scrollbar {
+//           display: none;
+//         }
+//       `}</style>
+
+//       {/* Fixed viewport container - sticks to top of scroll container */}
+//       <div className="sticky top-0 left-0 w-full h-screen overflow-hidden">
+//         {/* Horizontal scrolling container */}
+//         <div
+//           className="absolute top-0 left-0 h-screen flex will-change-transform"
+//           style={{
+//             width: '300vw',
+//             transform: `translateX(${getHorizontalPosition()}vw)`,
+//             transition: 'transform 0.1s ease-out'
+//           }}
+//         >
+//           {/* Scene 1 */}
+//           <div className="relative w-screen h-screen flex-shrink-0">
+//             <Scene1 scrollProgress={scene1Progress} />
+
+//             <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-mono z-50 backdrop-blur-sm">
+//               <div>Scene 1: {(scene1Progress * 100).toFixed(1)}%</div>
+//               <div className="text-xs opacity-60 mt-1">Position: {(scrollProgress * 100).toFixed(0)}%</div>
+//             </div>
+//           </div>
+
+//           {/* Scene 2 */}
+//           <div className="relative w-screen h-screen flex-shrink-0">
+//             <Scene2 scrollProgress={scene2Progress} />
+
+//             <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-mono z-50 backdrop-blur-sm">
+//               <div>Scene 2: {(scene2Progress * 100).toFixed(1)}%</div>
+//               <div className="text-xs opacity-60 mt-1">Position: {(scrollProgress * 100).toFixed(0)}%</div>
+//             </div>
+//           </div>
+
+//           {/* Scene 3 */}
+//           <div className="relative w-screen h-screen flex-shrink-0">
+//             <Scene3 scrollProgress={scene3Progress} />
+
+//             <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-mono z-50 backdrop-blur-sm">
+//               <div>Scene 3: {(scene3Progress * 100).toFixed(1)}%</div>
+//               <div className="text-xs opacity-60 mt-1">Position: {(scrollProgress * 100).toFixed(0)}%</div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Scroll indicator */}
+//         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/70 text-white px-6 py-3 rounded-full text-sm font-mono z-50 backdrop-blur-sm flex items-center gap-3">
+//           <div className="text-xs opacity-60">Scroll ↓</div>
+//           <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden">
+//             <div
+//               className="h-full bg-white rounded-full transition-all duration-100"
+//               style={{ width: `${scrollProgress * 100}%` }}
+//             />
+//           </div>
+//           <div>{(scrollProgress * 100).toFixed(0)}%</div>
+//         </div>
+//       </div>
+
+//       {/* Internal spacer - creates scroll space within container */}
+//       <div className="h-[200vh]" aria-hidden="true" />
+//     </div>
+//   )
+// }
+
+// export default ScrollStory
+
+// ======================================***********************
 // import { useEffect, useState, useCallback, useRef } from 'react'
 // import Scene1 from './Scene1'
 // import Scene2 from './Scene2'
